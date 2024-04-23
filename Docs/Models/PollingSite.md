@@ -76,3 +76,29 @@
   - Related Model: County
   - On Delete: CASCADE
   - Description: The county to which the city or town belongs.
+
+# UserPollingSitePermission model represents the permissions a user has for a polling site
+## UserPollingSitePermission
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the permission.
+- **polling_site**
+  - Type: ForeignKey
+  - Related Model: PollingSite
+  - On Delete: CASCADE
+  - Description: The polling site associated with the permission.
+- **permission**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "read"
+    - "write"
+  - Description: The permission level assigned to the user for the polling site.
+
+### Meta
+- **unique_together**
+  - Fields: ('user', 'polling_site', 'permission')
+  - Description: Ensures that the combination of user, polling site, and permission is unique.
