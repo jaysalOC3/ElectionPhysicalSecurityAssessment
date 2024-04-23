@@ -66,6 +66,11 @@
     - "completed"
   - Default: "invited"
   - Description: The status of the user's participation in the assessment.
+- **permission**
+  - Type: ForeignKey
+  - Related Model: UserAssessmentPermission
+  - On Delete: CASCADE
+  - Description: The permission associated with the user's access to the assessment.
 
 # AssessmentQuestion model represents a question in an assessment
 ## AssessmentQuestion
@@ -142,3 +147,30 @@
 - **__str__**
   - Description: Returns a string representation of the assessment response.
   - Return Type: str
+
+# UserAssessmentPermission model represents the permissions a user has for an assessment
+## UserAssessmentPermission
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the permission.
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment associated with the permission.
+- **permission**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "read"
+    - "write"
+  - Description: The permission level assigned to the user for the assessment.
+
+### Meta
+- **unique_together**
+  - Fields: ('user', 'assessment', 'permission')
+  - Description: Ensures that the combination of user, assessment, and permission is unique.
+
