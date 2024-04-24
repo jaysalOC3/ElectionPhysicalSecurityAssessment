@@ -48,63 +48,83 @@ Endpoint: /comments/{id}/
 Attributes: id, user_id (ForeignKey), notification_type (email, sms, push), frequency (immediate, daily, weekly).
 Endpoint: /notification-preferences/{id}/
 
+User Authentication and Authorization
+4.1. Models
+- User: Extend the User model to include additional fields (e.g., role).
+- UserRole: Define user roles and their associated permissions.
+4.2. Views
+- UserRegistrationView: Handle user registration requests.
+- UserLoginView: Handle user login requests.
+- UserLogoutView: Handle user logout requests.
+- PasswordResetRequestView: Handle password reset requests.
+- PasswordResetView: Handle password reset confirmation and update.
+4.3. Forms
+- UserRegistrationForm: Capture user registration information.
+- UserLoginForm: Capture user login credentials.
+- PasswordResetRequestForm: Capture the user's email for password reset.
+- PasswordResetForm: Capture the new password during password reset.
+4.4. Middleware and Decorators
+- PermissionMiddleware: Check user permissions for specific views or actions.
+- login_required decorator: Restrict access to authenticated users.
+- permission_required decorator: Restrict access based on user roles and permissions.
+
 Polling Site App
-4.1. PollingSite
+5.1. PollingSite
 Attributes: id, name, address, city_or_town_id (ForeignKey), state_id (ForeignKey), zip_code, latitude, longitude.
 Endpoint: /polling-sites/{id}/
-4.2. State
+5.2. State
 Attributes: id, name, code (e.g., "CA", "NY").
 Endpoint: /states/{id}/
-4.3. County
+5.3. County
 Attributes: id, name, state_id (ForeignKey).
 Endpoint: /counties/{id}/
-4.4. CityOrTown
+5.4. CityOrTown
 Attributes: id, name, county_id (ForeignKey).
 Endpoint: /cities-or-towns/{id}/
 
 User Feedback Collection
-5.1. Models
+6.1. Models
 UserFeedback: Represents feedback provided by users regarding their experience using the app.
 Attributes: id, user_id (ForeignKey), content, category (e.g., "usability", "functionality", "bug report"), created_at, updated_at.
-5.2. Views
+6.2. Views
 FeedbackCreateView: Allows users to submit feedback directly through the app.
 FeedbackListView: Enables administrators to view all feedback submitted by users.
-5.3. Forms
+6.3. Forms
 UserFeedbackForm: Form for creating and submitting feedback.
 
 Reporting and Analytics App
-6.1. CustomReport
+7.1. CustomReport
 Attributes: id, user_id (ForeignKey), name, description, query (e.g., SQL query), created_at, updated_at.
 Endpoint: /custom-reports/{id}/
-6.2. CustomDashboard
+7.2. CustomDashboard
 Attributes: id, user_id (ForeignKey), name, description, layout (JSON representing the dashboard layout), created_at, updated_at.
 Endpoint: /custom-dashboards/{id}/
 
 Integration and Communication
-7.1. Integration
+8.1. Integration
 Attributes: id, user_id (ForeignKey), platform (e.g., "slack", "ms_teams"), access_token, created_at, updated_at.
 Endpoint: /integrations/{id}/
 
 Administrative and Compliance Reporting
-8.1. Models
+9.1. Models
 ComplianceReport: Stores compliance reports for regulatory requirements.
 Attributes: id, assessment_id (ForeignKey), report_data (text, potentially JSON or XML), created_at, updated_at.
-8.2. Views
+9.2. Views
 ComplianceReportCreateView: Allows authorized users to generate compliance reports.
 ComplianceReportListView: Displays a list of compliance reports.
 ComplianceReportDetailView: Shows detailed information about specific compliance reports.
-8.3. Forms
+9.3. Forms
 ComplianceReportForm: Form for generating and editing compliance reports.
 
 Advanced User Management
-9.1. Models
+10.1. Models
 UserActivityLog: Tracks user actions within the app.
 Attributes: id, user_id (ForeignKey), action, timestamp.
-9.2. Views
+10.2. Views
 UserActivityLogListView: Provides a view of user activities.
 UserRoleUpdateView: Updates user roles and permissions.
 UserActivityDetailView: Shows detailed user activity information.
-9.3. Forms
+10.3. Forms
 UserRoleForm: Form for updating user roles and permissions.
 
 Implementation Plan:
