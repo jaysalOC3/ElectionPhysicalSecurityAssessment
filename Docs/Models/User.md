@@ -54,6 +54,11 @@
   - Type: BooleanField
   - Default: false
   - Description: Indicates whether the user automatically accepts assessment invitations.
+- **role**
+  - Type: ForeignKey
+  - Related Model: UserRole
+  - On Delete: CASCADE
+  - Description: The role assigned to the user.
 
 ### Methods
 - **__str__**
@@ -62,3 +67,15 @@
   - Description: Returns the first_name plus the last_name, with a space in between.
 - **get_short_name**
   - Description: Returns the short name for the user (typically the first name).
+
+# UserRole model represents the roles assigned to users
+## UserRole
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 50
+  - Unique: true
+  - Description: The name of the role (e.g., Site Leader, Assessor, Reviewer, Admin).
+- **permissions**
+  - Type: JSONField
+  - Description: The permissions associated with the role, stored as a JSON object.

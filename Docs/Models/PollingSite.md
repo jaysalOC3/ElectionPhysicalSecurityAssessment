@@ -9,16 +9,19 @@
   - Type: TextField
   - Description: The address of the polling site.
 - **state**
-  - Type: CharField
-  - Max Length: 100
+  - Type: ForeignKey
+  - Related Model: State
+  - On Delete: CASCADE
   - Description: The state where the polling site is located.
 - **county**
-  - Type: CharField
-  - Max Length: 100
+  - Type: ForeignKey
+  - Related Model: County
+  - On Delete: CASCADE
   - Description: The county where the polling site is located.
 - **city_or_town**
-  - Type: CharField
-  - Max Length: 100
+  - Type: ForeignKey
+  - Related Model: CityOrTown
+  - On Delete: CASCADE
   - Description: The city or town where the polling site is located.
 - **contact_person**
   - Type: ForeignKey
@@ -41,6 +44,16 @@
   - Blank: true
   - On Delete: SET_NULL
   - Description: The risk assessment associated with the polling site.
+- **site_type**
+  - Type: CharField
+  - Max Length: 50
+  - Choices:
+    - "regular"
+    - "early_voting"
+    - "drop_off"
+    - "mobile"
+  - Default: "regular"
+  - Description: The type of polling site (regular, early voting, drop-off, mobile).
 
 # State model represents the states
 ## State

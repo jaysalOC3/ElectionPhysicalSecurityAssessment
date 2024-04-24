@@ -27,6 +27,40 @@
   - Blank: true
   - On Delete: SET_NULL
   - Description: The polling site assigned to the assessment.
+- **status**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "draft"
+    - "in_progress"
+    - "submitted"
+    - "approved"
+  - Default: "draft"
+  - Description: The status of the assessment.
+- **submitted_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The user who submitted the assessment.
+- **submitted_at**
+  - Type: DateTimeField
+  - Null: true
+  - Blank: true
+  - Description: The timestamp of when the assessment was submitted.
+- **approved_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The user who approved the assessment.
+- **approved_at**
+  - Type: DateTimeField
+  - Null: true
+  - Blank: true
+  - Description: The timestamp of when the assessment was approved.
 
 ### Methods
 - **calculate_overall_score**
@@ -71,6 +105,11 @@
   - Related Model: UserAssessmentPermission
   - On Delete: CASCADE
   - Description: The permission associated with the user's access to the assessment.
+- **assigned_sections**
+  - Type: ManyToManyField
+  - Related Model: AssessmentSection
+  - Blank: true
+  - Description: The sections of the assessment assigned to the user.
 
 # AssessmentQuestion model represents a question in an assessment
 ## AssessmentQuestion
@@ -104,6 +143,11 @@
   - Type: DateTimeField
   - Auto Now: true
   - Description: The timestamp of when the question was last updated.
+- **section**
+  - Type: ForeignKey
+  - Related Model: AssessmentSection
+  - On Delete: CASCADE
+  - Description: The section to which the question belongs.
 
 ### Methods
 - **__str__**
@@ -142,6 +186,11 @@
   - Type: DateTimeField
   - Auto Now Add: true
   - Description: The timestamp of when the response was submitted.
+- **attachments**
+  - Type: ManyToManyField
+  - Related Model: Attachment
+  - Blank: true
+  - Description: The attachments (photos, documents) associated with the response.
 
 ### Methods
 - **__str__**
@@ -174,3 +223,48 @@
   - Fields: ('user', 'assessment', 'permission')
   - Description: Ensures that the combination of user, assessment, and permission is unique.
 
+# AssessmentSection model represents a section within an assessment
+## AssessmentSection
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 255
+  - Description: The name of the section.
+- **description**
+  - Type: TextField
+  - Blank: true
+  - Description: A description of the section.
+- **order**
+  - Type: PositiveIntegerField
+  - Default: 0
+  - Description: The order of the section within the assessment.
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment to which the section belongs.
+
+# Attachment model represents an attachment (photo, document) associated with an assessment response
+## Attachment
+### Fields
+- **file**
+  - Type: FileField
+  - Upload To: 'attachments/'
+  - Description: The uploaded file attachment.
+- **name**
+  - Type: CharField
+  - Max Length: 255
+  - Description: The name of the attachment.
+- **description**
+  - Type: TextField
+  - Blank: true
+  - Description: A description of the attachment.
+- **uploaded_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who uploaded the attachment.
+- **uploaded_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the attachment was uploaded.
