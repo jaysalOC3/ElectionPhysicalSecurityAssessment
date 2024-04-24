@@ -310,3 +310,152 @@
   - Type: BooleanField
   - Default: false
   - Description: Indicates whether the notification has been read by the user.
+
+AssessmentReport model represents the generated reports for assessments
+AssessmentReport
+Fields
+
+assessment
+
+Type: ForeignKey
+Related Model: Assessment
+On Delete: CASCADE
+Description: The assessment associated with the report.
+
+
+report_type
+
+Type: CharField
+Max Length: 50
+Choices:
+
+"summary"
+"detailed"
+"aggregated"
+
+
+Description: The type of report (summary, detailed, aggregated).
+
+
+report_data
+
+Type: JSONField
+Description: The report data stored as a JSON object.
+
+
+generated_at
+
+Type: DateTimeField
+Auto Now Add: true
+Description: The timestamp of when the report was generated.
+
+AssessmentCollaboration model represents the collaboration features for an assessment
+AssessmentCollaboration
+Fields
+
+assessment
+
+Type: OneToOneField
+Related Model: Assessment
+On Delete: CASCADE
+Description: The assessment associated with the collaboration.
+
+
+chat_enabled
+
+Type: BooleanField
+Default: true
+Description: Indicates whether the chat feature is enabled for the assessment.
+
+
+commenting_enabled
+
+Type: BooleanField
+Default: true
+Description: Indicates whether the commenting feature is enabled for the assessment.
+
+
+
+AssessmentChatMessage model represents a chat message in an assessment collaboration
+AssessmentChatMessage
+Fields
+
+collaboration
+
+Type: ForeignKey
+Related Model: AssessmentCollaboration
+On Delete: CASCADE
+Description: The collaboration associated with the chat message.
+
+
+user
+
+Type: ForeignKey
+Related Model: User
+On Delete: CASCADE
+Description: The user who sent the chat message.
+
+
+message
+
+Type: TextField
+Description: The content of the chat message.
+
+
+timestamp
+
+Type: DateTimeField
+Auto Now Add: true
+Description: The timestamp of when the chat message was sent.
+
+
+
+AssessmentComment model represents a comment in an assessment collaboration
+AssessmentComment
+Fields
+
+collaboration
+
+Type: ForeignKey
+Related Model: AssessmentCollaboration
+On Delete: CASCADE
+Description: The collaboration associated with the comment.
+
+
+user
+
+Type: ForeignKey
+Related Model: User
+On Delete: CASCADE
+Description: The user who posted the comment.
+
+
+content
+
+Type: TextField
+Description: The content of the comment.
+
+
+timestamp
+
+Type: DateTimeField
+Auto Now Add: true
+Description: The timestamp of when the comment was posted.
+
+
+parent_comment
+
+Type: ForeignKey
+Related Model: self
+Null: true
+Blank: true
+On Delete: CASCADE
+Description: The parent comment, if the comment is a reply to another comment.
+
+
+mentioned_users
+
+Type: ManyToManyField
+Related Model: User
+Blank: true
+Description: The users mentioned or tagged in the comment.

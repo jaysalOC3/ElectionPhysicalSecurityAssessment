@@ -1,0 +1,170 @@
+Overview
+1.1. Purpose
+- The main objective of the Assessment App is to empower election site leaders to conduct comprehensive on-site security evaluations of polling places.
+- The app aims to address the lack of time, tools, and training faced by election site leaders, often volunteers, in thoroughly assessing their facilities.
+- The target users are election site leaders who are responsible for ensuring the physical security of polling places.
+1.2. Features
+- The app provides an intuitive interface that guides site leaders through the assessment process.
+- Users can efficiently collect key facility data, document existing safeguards, and identify potential vulnerabilities.
+- The app supports secure collaboration among site staff, allowing them to work together on assessments.
+- It generates a detailed report with practical recommendations for enhancing physical security based on the assessment findings.
+- The app aligns with CISA guidelines and industry best practices for polling place security.
+1.3. Models
+- The main data models in the app include Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse, and UserAssessmentPermission.
+- The Assessment model represents an assessment instance, while UserAssessment represents the relationship between users and assessments.
+- AssessmentQuestion and AssessmentResponse models capture the questions and user responses within an assessment.
+- UserAssessmentPermission model manages user permissions for accessing and modifying assessments.
+- Other supporting models include AssessmentSection, Attachment, Report, Notification, AssessmentReport, AssessmentCollaboration, AssessmentChatMessage, AssessmentComment, and AssessmentVersion.
+Assessment App
+2.1. Models
+- Assessment: Represents an assessment instance
+- UserAssessment: Represents the relationship between users and assessments
+- AssessmentQuestion: Represents a question in an assessment
+- AssessmentResponse: Represents a user's response to a question
+- UserAssessmentPermission: Represents user permissions for an assessment
+- AssessmentSection: Represents a section within an assessment
+- Attachment: Represents an attachment (photo, document) associated with a response
+- Report: Represents a generated report for an assessment
+- Notification: Represents notifications sent to users
+- AssessmentReport: Represents the generated reports for assessments
+- AssessmentCollaboration: Represents collaboration features for an assessment
+- AssessmentChatMessage: Represents a chat message in an assessment collaboration
+- AssessmentComment: Represents a comment in an assessment collaboration
+- AssessmentVersion: Represents a version of an assessment for version control
+- UserProgress: Represents the user's progress and achievements within the app
+- Recommendation: Represents personalized recommendations based on assessment history
+- MultimediaContent: Represents interactive tutorials, videos, or infographics
+2.2. Views
+- AssessmentReportView: Generates a report for a completed assessment
+- NotificationListView: Retrieves a list of notifications for the authenticated user
+- NotificationMarkReadView: Marks a notification as read
+- DashboardView: Displays the dashboard for the authenticated user
+- AssessmentSearchView: Performs a search for assessments based on criteria
+- AssessmentListView: Displays a list of assessments
+- AssessmentCreateView: Allows authorized users to create a new assessment
+- AssessmentDetailView: Shows detailed information about a specific assessment
+- AssessmentUpdateView: Allows authorized users to update assessment details
+- AssessmentDeleteView: Allows authorized users to delete an assessment
+- AssessmentSubmitView: Allows users to submit their completed assessment
+- AssessmentApproveView: Allows authorized users to approve a submitted assessment
+- AssessmentCommentView: Allows users to add comments to an assessment or question
+- AssessmentReportListView: Retrieves a list of reports for an assessment
+- AssessmentReportDetailView: Shows detailed information about an assessment report
+- AggregatedReportView: Generates an aggregated report across multiple assessments
+- ReportDashboardView: Displays an overview of key metrics and analytics
+- CustomReportView: Allows users to create and generate custom reports
+- ScheduledReportView: Enables users to schedule automatic report generation
+- CollaborationDashboardView: Provides an overview of ongoing collaborations
+- ChatView: Implements real-time chat functionality for users within an assessment
+- CommentView: Allows users to add, view, and reply to comments
+- NotificationView: Displays notifications and allows users to manage settings
+- AuditTrailView: Displays a log of changes made to assessments and data
+- VersionHistoryView: Shows the version history of an assessment
+- OnboardingView: Provides a user-friendly onboarding process for new users
+- ProgressView: Displays the user's progress, badges, and rewards
+- RecommendationView: Shows personalized recommendations based on assessment history
+- MultimediaContentView: Displays interactive tutorials, videos, or infographics
+2.3. Forms
+- AssessmentForm: Form for creating and updating assessments
+- AssessmentResponseForm: Form for capturing responses to assessment questions
+- AssessmentQuestionForm: Form for creating and updating assessment questions
+- AssessmentSearchForm: Form for searching assessments based on criteria
+Polling Site App
+3.1. Models
+- PollingSite: Represents a polling site location
+- State: Represents a state
+- County: Represents a county within a state
+- CityOrTown: Represents a city or town within a county
+- UserPollingSitePermission: Represents user permissions for a polling site
+3.2. Views
+- PollingSiteListView: Displays a list of polling sites
+- PollingSiteDetailView: Shows detailed information about a specific polling site
+- PollingSiteCreateView: Allows authorized users to create a new polling site
+- PollingSiteUpdateView: Allows authorized users to update polling site details
+- PollingSiteDeleteView: Allows authorized users to delete a polling site
+3.3. Forms
+- PollingSiteForm: Form for creating and updating polling sites
+User App
+4.1. Models
+- User: Represents a user of the system
+- UserRole: Represents the roles assigned to users
+- Comment: Represents comments or discussions related to an assessment or question
+- NotificationPreference: Represents the notification preferences for a user
+- CommunicationPreference: Represents the user's preferred communication channels
+- UserGroup: Represents interest-based groups or communities within the app
+4.2. Views
+- CommentCreateView: Creates a new comment for an assessment or question
+- CommentListView: Retrieves a list of comments for an assessment or question
+- UserProfileView: Displays the user's profile information
+- UserUpdateView: Allows users to update their profile information
+- UserAssessmentListView: Shows a list of assessments the user is associated with
+- UserInvitationListView: Displays the list of assessment invitations received by the user
+- AcceptInvitationView: Allows users to accept an assessment invitation
+- DeclineInvitationView: Allows users to decline an assessment invitation
+- NotificationPreferenceUpdateView: Allows users to update their notification preferences
+- NotificationListView: Retrieves a list of notifications for the authenticated user
+- CommunicationHubView: Provides a centralized hub for discussions, best practices, and expert guidance
+- AssistanceRequestView: Allows users to request assistance or escalate issues
+- UserGroupListView: Displays a list of interest-based groups or communities
+- UserGroupDetailView: Shows detailed information about a specific user group
+- CommunicationPreferenceUpdateView: Allows users to update their communication preferences
+4.3. Forms
+- UserRegistrationForm: Form for user registration
+- UserUpdateForm: Form for updating user profile information
+- CommentForm: Form for creating comments
+- NotificationPreferenceForm: Form for updating notification preferences
+- CommunicationPreferenceForm: Form for updating communication preferences
+Help and Documentation App
+5.1. Views
+- HelpCenterView: Provides a centralized location for accessing help resources
+- ContextualHelpView: Displays context-sensitive help based on the user's location
+- FAQView: Presents frequently asked questions and their answers
+5.2. Models
+- HelpArticle: Represents a help article or tutorial
+- FAQ: Represents a frequently asked question and its answer
+5.3. Forms
+- HelpSearchForm: Form for searching help articles and FAQs
+Roles and Permissions
+6.1. Analyst
+- Has access to all reporting and analytics features
+- Can view reports relevant to their assessments
+6.2. Admin
+- Can configure and manage report templates and scheduling
+- Can configure audit trail settings and manage data retention policies
+- Has administrative privileges across the system
+6.3. User
+- Can participate in assessments and provide responses
+- Can view reports and version history of their own assessments
+6.4. Collaborator
+- Can participate in chat and discussions, tag other users, and receive notifications
+- Can view and contribute to assessments they are invited to
+6.5. Moderator
+- Has additional permissions to moderate discussions and manage communication channels
+- Can manage user roles and permissions within their assigned assessments
+6.6. Auditor
+- Has access to the audit trail and can review changes made to the system
+- Can generate audit reports and monitor system activity
+Reporting and Analytics App
+7.1. Models
+- CustomReport: Represents a custom report created by users
+- CustomDashboard: Represents a custom dashboard created by users
+- PredictiveAnalysis: Represents predictive analytics results and insights
+- ComparativeAnalysis: Represents comparative analysis results and benchmarks
+7.2. Views
+- DataVisualizationView: Provides interactive data visualizations and dashboards
+- CustomReportView: Allows users to create and generate custom reports
+- CustomDashboardView: Allows users to create and customize dashboards
+- PredictiveAnalysisView: Displays predictive analytics results and insights
+- ComparativeAnalysisView: Shows comparative analysis results and benchmarks
+7.3. Forms
+- CustomReportForm: Form for creating custom reports
+- CustomDashboardForm: Form for creating custom dashboards
+Integration and Communication
+8.1. Views
+- IntegrationSettingsView: Allows users to configure integrations with external platforms
+- SlackIntegrationView: Enables integration with Slack for notifications and updates
+- MSTeamsIntegrationView: Enables integration with Microsoft Teams for notifications and updates
+8.2. Models
+- Integration: Represents an integration with an external platform
+8.3. Forms
+- IntegrationSettingsForm: Form for configuring integration settings

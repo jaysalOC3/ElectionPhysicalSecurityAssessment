@@ -141,3 +141,54 @@
 - Response:
   - HTTP Status Code: 302 (Found)
   - Redirect: `/assessments/<assessment_id>/`
+
+AssessmentReportListView
+
+Description: Retrieves a list of reports for an assessment.
+URL: /assessments/<assessment_id>/reports/
+HTTP Method: GET
+Request Parameters:
+
+assessment_id: The ID of the assessment to retrieve reports for.
+
+
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: List of assessment reports in JSON format.
+
+
+
+AssessmentReportDetailView
+
+Description: Shows detailed information about a specific assessment report.
+URL: /assessments/<assessment_id>/reports/<report_id>/
+HTTP Method: GET
+Request Parameters:
+
+assessment_id: The ID of the assessment associated with the report.
+report_id: The ID of the report to display.
+
+
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: Rendered HTML template with detailed information about the assessment report.
+
+
+
+AggregatedReportView
+
+Description: Generates an aggregated report across multiple assessments or polling sites.
+URL: /reports/aggregated/
+HTTP Method: GET
+Request Parameters:
+
+assessment_ids: (Optional) Comma-separated list of assessment IDs to include in the aggregated report.
+polling_site_ids: (Optional) Comma-separated list of polling site IDs to include in the aggregated report.
+
+
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: Rendered HTML template with the aggregated report.

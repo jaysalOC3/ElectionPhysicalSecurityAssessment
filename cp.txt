@@ -1,0 +1,1377 @@
+Individual Files:
+Python django File: README.md
+# Polling Place Security Assessment App
+## Purpose
+Ensuring the physical security of polling places is critical to protecting the integrity of our elections. However, many election site leaders, often volunteers, lack the time, tools, and training to thoroughly assess their facilities. That's where our Polling Place Security Assessment App comes in.
+About Us
+Our team has over 20 years of experience in information security and risk assessment. We've developed a user-friendly web application that empowers election site leaders to conduct comprehensive on-site security evaluations, aligned with CISA guidelines and industry best practices.
+Features
+
+Intuitive interface that guides site leaders through the assessment process
+Efficient data collection for key facility information and existing safeguards
+Identification of potential vulnerabilities and areas for improvement
+Secure collaboration among site staff
+Detailed assessment reports with practical recommendations for enhancing physical security
+Support for resource allocation and facility upgrade requests
+
+## Benefits
+By leveraging our expertise and purpose-built app, election site leaders can:
+
+Consistently evaluate security controls
+Prioritize improvements based on identified vulnerabilities
+Demonstrate their dedication to providing a safe voting environment
+Generate compelling reports to support requests for resources and upgrades
+
+## Partnerships
+We're partnering with state and local election authorities to raise awareness and promote best practices for polling place security. Our mission is to empower election site leaders nationwide with the tools and knowledge they need to protect our democratic process.
+Impact
+With our support, site leaders can conduct efficient, effective assessments that give voters confidence in the security and integrity of their polling places. By empowering election officials with the right tools, we're helping to safeguard the foundation of our democracy.
+
+## Get Started
+If you're an election site leader looking to enhance the physical security of your polling place, our Polling Place Security Assessment App is here to help. Contact us today to learn more and get started with your assessment.
+Together, we can ensure that every polling place is a safe and secure environment for voters to exercise their fundamental right to vote.
+
+========================================
+Folder: ./Docs/apps/Assessment/Model
+Python django File: ./Docs/apps/Assessment/Model/Assessment.md
+# Assessment model represents the assessments in the system
+## Assessment
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 255
+  - Description: The name of the assessment.
+- **description**
+  - Type: TextField
+  - Blank: true
+  - Description: A description of the assessment.
+- **start_date**
+  - Type: DateTimeField
+  - Description: The start date and time of the assessment.
+- **end_date**
+  - Type: DateTimeField
+  - Description: The end date and time of the assessment.
+- **participants**
+  - Type: ManyToManyField
+  - Related Model: User
+  - Through: UserAssessment
+  - Description: The users participating in the assessment.
+- **polling_site**
+  - Type: ForeignKey
+  - Related Model: PollingSite
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The polling site assigned to the assessment.
+- **status**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "draft"
+    - "in_progress"
+    - "submitted"
+    - "approved"
+  - Default: "draft"
+  - Description: The status of the assessment.
+- **submitted_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The user who submitted the assessment.
+- **submitted_at**
+  - Type: DateTimeField
+  - Null: true
+  - Blank: true
+  - Description: The timestamp of when the assessment was submitted.
+- **approved_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The user who approved the assessment.
+- **approved_at**
+  - Type: DateTimeField
+  - Null: true
+  - Blank: true
+  - Description: The timestamp of when the assessment was approved.
+
+### Methods
+- **calculate_overall_score**
+  - Description: Calculates the overall maturity score for the assessment based on the individual question responses.
+  - Return Type: float
+
+# UserAssessment model represents the relationship between users and assessments
+## UserAssessment
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the assessment.
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment the user is associated with.
+- **joined_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The date and time when the user joined the assessment.
+- **invited_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The user who invited this user to the assessment (if applicable).
+- **status**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "invited"
+    - "joined"
+    - "completed"
+  - Default: "invited"
+  - Description: The status of the user's participation in the assessment.
+- **permission**
+  - Type: ForeignKey
+  - Related Model: UserAssessmentPermission
+  - On Delete: CASCADE
+  - Description: The permission associated with the user's access to the assessment.
+- **assigned_sections**
+  - Type: ManyToManyField
+  - Related Model: AssessmentSection
+  - Blank: true
+  - Description: The sections of the assessment assigned to the user.
+
+# AssessmentQuestion model represents a question in an assessment
+## AssessmentQuestion
+### Fields
+- **question_text**
+  - Type: TextField
+  - Description: The text of the question.
+- **question_type**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "yes_no"
+    - "multiple_choice"
+    - "text"
+  - Default: "yes_no"
+  - Description: The type of the question (yes/no, multiple choice, text).
+- **choices**
+  - Type: JSONField
+  - Null: true
+  - Blank: true
+  - Description: The choices for a multiple-choice question, stored as a JSON array.
+- **order**
+  - Type: PositiveIntegerField
+  - Default: 0
+  - Description: The order of the question within the assessment.
+- **created_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the question was created.
+- **updated_at**
+  - Type: DateTimeField
+  - Auto Now: true
+  - Description: The timestamp of when the question was last updated.
+- **section**
+  - Type: ForeignKey
+  - Related Model: AssessmentSection
+  - On Delete: CASCADE
+  - Description: The section to which the question belongs.
+
+### Methods
+- **__str__**
+  - Description: Returns the question text as the string representation of the question.
+
+# AssessmentResponse model represents a single response to a question in an assessment
+## AssessmentResponse
+### Fields
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment to which the response belongs.
+- **question**
+  - Type: ForeignKey
+  - Related Model: AssessmentQuestion
+  - On Delete: CASCADE
+  - Description: The question to which the response belongs.
+- **maturity_score**
+  - Type: IntegerField
+  - Choices:
+    - 0: "Not Implemented"
+    - 1: "Partially Implemented"
+    - 2: "Fully Implemented"
+  - Description: The maturity score for the response (0: Not Implemented, 1: Partially Implemented, 2: Fully Implemented).
+- **notes**
+  - Type: TextField
+  - Blank: true
+  - Description: Additional notes or comments related to the response.
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who provided the response.
+- **timestamp**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the response was submitted.
+- **attachments**
+  - Type: ManyToManyField
+  - Related Model: Attachment
+  - Blank: true
+  - Description: The attachments (photos, documents) associated with the response.
+
+### Methods
+- **__str__**
+  - Description: Returns a string representation of the assessment response.
+  - Return Type: str
+
+# UserAssessmentPermission model represents the permissions a user has for an assessment
+## UserAssessmentPermission
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the permission.
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment associated with the permission.
+- **permission**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "read"
+    - "write"
+  - Description: The permission level assigned to the user for the assessment.
+
+### Meta
+- **unique_together**
+  - Fields: ('user', 'assessment', 'permission')
+  - Description: Ensures that the combination of user, assessment, and permission is unique.
+
+# AssessmentSection model represents a section within an assessment
+## AssessmentSection
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 255
+  - Description: The name of the section.
+- **description**
+  - Type: TextField
+  - Blank: true
+  - Description: A description of the section.
+- **order**
+  - Type: PositiveIntegerField
+  - Default: 0
+  - Description: The order of the section within the assessment.
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment to which the section belongs.
+
+# Attachment model represents an attachment (photo, document) associated with an assessment response
+## Attachment
+### Fields
+- **file**
+  - Type: FileField
+  - Upload To: 'attachments/'
+  - Description: The uploaded file attachment.
+- **name**
+  - Type: CharField
+  - Max Length: 255
+  - Description: The name of the attachment.
+- **description**
+  - Type: TextField
+  - Blank: true
+  - Description: A description of the attachment.
+- **uploaded_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who uploaded the attachment.
+- **uploaded_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the attachment was uploaded.
+
+# Report model represents a generated report for an assessment
+## Report
+### Fields
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment associated with the report.
+- **generated_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who generated the report.
+- **generated_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the report was generated.
+- **report_file**
+  - Type: FileField
+  - Upload To: 'reports/'
+  - Description: The generated report file.
+
+# Notification model represents notifications sent to users
+## Notification
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the notification.
+- **message**
+  - Type: TextField
+  - Description: The notification message.
+- **created_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the notification was created.
+- **is_read**
+  - Type: BooleanField
+  - Default: false
+  - Description: Indicates whether the notification has been read by the user.
+
+AssessmentReport model represents the generated reports for assessments
+AssessmentReport
+Fields
+
+assessment
+
+Type: ForeignKey
+Related Model: Assessment
+On Delete: CASCADE
+Description: The assessment associated with the report.
+
+
+report_type
+
+Type: CharField
+Max Length: 50
+Choices:
+
+"summary"
+"detailed"
+"aggregated"
+
+
+Description: The type of report (summary, detailed, aggregated).
+
+
+report_data
+
+Type: JSONField
+Description: The report data stored as a JSON object.
+
+
+generated_at
+
+Type: DateTimeField
+Auto Now Add: true
+Description: The timestamp of when the report was generated.
+
+AssessmentCollaboration model represents the collaboration features for an assessment
+AssessmentCollaboration
+Fields
+
+assessment
+
+Type: OneToOneField
+Related Model: Assessment
+On Delete: CASCADE
+Description: The assessment associated with the collaboration.
+
+
+chat_enabled
+
+Type: BooleanField
+Default: true
+Description: Indicates whether the chat feature is enabled for the assessment.
+
+
+commenting_enabled
+
+Type: BooleanField
+Default: true
+Description: Indicates whether the commenting feature is enabled for the assessment.
+
+
+
+AssessmentChatMessage model represents a chat message in an assessment collaboration
+AssessmentChatMessage
+Fields
+
+collaboration
+
+Type: ForeignKey
+Related Model: AssessmentCollaboration
+On Delete: CASCADE
+Description: The collaboration associated with the chat message.
+
+
+user
+
+Type: ForeignKey
+Related Model: User
+On Delete: CASCADE
+Description: The user who sent the chat message.
+
+
+message
+
+Type: TextField
+Description: The content of the chat message.
+
+
+timestamp
+
+Type: DateTimeField
+Auto Now Add: true
+Description: The timestamp of when the chat message was sent.
+
+
+
+AssessmentComment model represents a comment in an assessment collaboration
+AssessmentComment
+Fields
+
+collaboration
+
+Type: ForeignKey
+Related Model: AssessmentCollaboration
+On Delete: CASCADE
+Description: The collaboration associated with the comment.
+
+
+user
+
+Type: ForeignKey
+Related Model: User
+On Delete: CASCADE
+Description: The user who posted the comment.
+
+
+content
+
+Type: TextField
+Description: The content of the comment.
+
+
+timestamp
+
+Type: DateTimeField
+Auto Now Add: true
+Description: The timestamp of when the comment was posted.
+
+
+parent_comment
+
+Type: ForeignKey
+Related Model: self
+Null: true
+Blank: true
+On Delete: CASCADE
+Description: The parent comment, if the comment is a reply to another comment.
+
+
+mentioned_users
+
+Type: ManyToManyField
+Related Model: User
+Blank: true
+Description: The users mentioned or tagged in the comment.
+
+========================================
+Folder: ./Docs/apps/Assessment/View
+Python django File: ./Docs/apps/Assessment/View/Assessment_views.md
+# AssessmentReportView
+- Description: Generates a report for a completed assessment.
+- URL: `/assessments/<assessment_id>/generate-report/`
+- HTTP Method: POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment for which to generate the report.
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: The generated report file.
+
+# NotificationListView
+- Description: Retrieves a list of notifications for the authenticated user.
+- URL: `/notifications/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: List of notifications in JSON format.
+
+# NotificationMarkReadView
+- Description: Marks a notification as read.
+- URL: `/notifications/<notification_id>/mark-read/`
+- HTTP Method: POST
+- Request Parameters:
+  - `notification_id`: The ID of the notification to mark as read.
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Success message in JSON format.
+
+# DashboardView
+- Description: Displays the dashboard for the authenticated user.
+- URL: `/dashboard/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template of the dashboard.
+
+# AssessmentSearchView
+- Description: Performs a search for assessments based on provided criteria.
+- URL: `/assessments/search/`
+- HTTP Method: GET
+- Request Parameters:
+  - `q`: The search query.
+  - `status`: (Optional) Filter assessments by status.
+  - `start_date`: (Optional) Filter assessments by start date.
+  - `end_date`: (Optional) Filter assessments by end date.
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: List of matching assessments in JSON format.
+
+# AssessmentListView
+- Description: Displays a list of assessments.
+- URL: `/assessments/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with a list of assessments.
+
+# AssessmentCreateView
+- Description: Allows authorized users to create a new assessment.
+- URL: `/assessments/create/`
+- HTTP Method: GET, POST
+- Request Parameters: None
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a form to create a new assessment.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/assessments/<new_assessment_id>/`
+
+# AssessmentDetailView
+- Description: Shows detailed information about a specific assessment.
+- URL: `/assessments/<assessment_id>/`
+- HTTP Method: GET
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment to display.
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with detailed information about the assessment.
+
+# AssessmentUpdateView
+- Description: Allows authorized users to update the details of an assessment.
+- URL: `/assessments/<assessment_id>/update/`
+- HTTP Method: GET, POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment to update.
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a form to update the assessment details.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/assessments/<assessment_id>/`
+
+# AssessmentDeleteView
+- Description: Allows authorized users to delete an assessment.
+- URL: `/assessments/<assessment_id>/delete/`
+- HTTP Method: GET, POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment to delete.
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a confirmation prompt to delete the assessment.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/assessments/`
+
+# AssessmentSubmitView
+- Description: Allows users to submit their completed assessment.
+- URL: `/assessments/<assessment_id>/submit/`
+- HTTP Method: POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment to submit.
+- Response:
+  - HTTP Status Code: 302 (Found)
+  - Redirect: `/assessments/<assessment_id>/`
+
+# AssessmentApproveView
+- Description: Allows authorized users to approve a submitted assessment.
+- URL: `/assessments/<assessment_id>/approve/`
+- HTTP Method: POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment to approve.
+- Response:
+  - HTTP Status Code: 302 (Found)
+  - Redirect: `/assessments/<assessment_id>/`
+
+# AssessmentCommentView
+- Description: Allows users to add comments or participate in discussions related to an assessment or a specific question.
+- URL: `/assessments/<assessment_id>/comments/`
+- HTTP Method: POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment for which the comment is being added.
+- Request Body:
+  - `question_id`: (Optional) The ID of the specific question the comment is related to.
+  - `content`: The content of the comment.
+- Response:
+  - HTTP Status Code: 302 (Found)
+  - Redirect: `/assessments/<assessment_id>/`
+
+AssessmentReportListView
+
+Description: Retrieves a list of reports for an assessment.
+URL: /assessments/<assessment_id>/reports/
+HTTP Method: GET
+Request Parameters:
+
+assessment_id: The ID of the assessment to retrieve reports for.
+
+
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: List of assessment reports in JSON format.
+
+
+
+AssessmentReportDetailView
+
+Description: Shows detailed information about a specific assessment report.
+URL: /assessments/<assessment_id>/reports/<report_id>/
+HTTP Method: GET
+Request Parameters:
+
+assessment_id: The ID of the assessment associated with the report.
+report_id: The ID of the report to display.
+
+
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: Rendered HTML template with detailed information about the assessment report.
+
+
+
+AggregatedReportView
+
+Description: Generates an aggregated report across multiple assessments or polling sites.
+URL: /reports/aggregated/
+HTTP Method: GET
+Request Parameters:
+
+assessment_ids: (Optional) Comma-separated list of assessment IDs to include in the aggregated report.
+polling_site_ids: (Optional) Comma-separated list of polling site IDs to include in the aggregated report.
+
+
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: Rendered HTML template with the aggregated report.
+
+========================================
+Folder: ./Docs/apps/Assessment/Form
+Python django File: ./Docs/apps/Assessment/Form/Assessment_forms.md
+# AssessmentForm for creating and updating assessments
+## AssessmentForm
+### Fields
+- **name**
+  - Type: CharField
+  - Widget: TextInput
+  - Description: The name of the assessment.
+- **description**
+  - Type: CharField
+  - Widget: Textarea
+  - Description: The description of the assessment.
+- **start_date**
+  - Type: DateField
+  - Widget: DateInput
+  - Description: The start date of the assessment.
+- **end_date**
+  - Type: DateField
+  - Widget: DateInput
+  - Description: The end date of the assessment.
+- **polling_site**
+  - Type: ModelChoiceField
+  - Queryset: PollingSite.objects.all()
+  - Description: The polling site associated with the assessment.
+- **status**
+  - Type: ChoiceField
+  - Choices: Assessment.STATUS_CHOICES
+  - Description: The status of the assessment.
+
+# AssessmentResponseForm for capturing responses to assessment questions
+## AssessmentResponseForm
+### Fields
+- **maturity_score**
+  - Type: ChoiceField
+  - Choices: AssessmentResponse.MATURITY_CHOICES
+  - Description: The maturity score for the response.
+- **notes**
+  - Type: CharField
+  - Widget: Textarea
+  - Description: Additional notes for the response.
+
+### Methods
+- **__init__**
+  - Description: Initializes the form with the provided question.
+  - Parameters:
+    - `question`: The AssessmentQuestion instance.
+
+# AssessmentQuestionForm for creating and updating assessment questions
+## AssessmentQuestionForm
+### Fields
+- **question_text**
+  - Type: CharField
+  - Widget: Textarea
+  - Description: The text of the question.
+- **question_type**
+  - Type: ChoiceField
+  - Choices: AssessmentQuestion.QUESTION_TYPE_CHOICES
+  - Description: The type of the question.
+- **choices**
+  - Type: CharField
+  - Widget: Textarea
+  - Description: The choices for a multiple-choice question.
+- **order**
+  - Type: IntegerField
+  - Widget: NumberInput
+  - Description: The order of the question.
+
+# AssessmentSearchForm for searching assessments
+## AssessmentSearchForm
+### Fields
+- **query**
+  - Type: CharField
+  - Required: false
+  - Description: The search query.
+- **status**
+  - Type: ChoiceField
+  - Choices: Assessment.STATUS_CHOICES
+  - Required: false
+  - Description: The status of the assessment.
+- **start_date**
+  - Type: DateField
+  - Required: false
+  - Description: The start date of the assessment.
+- **end_date**
+  - Type: DateField
+  - Required: false
+  - Description: The end date of the assessment.
+
+========================================
+Folder: ./Docs/apps/PollingSite/Model
+Python django File: ./Docs/apps/PollingSite/Model/PollingSite.md
+# PollingSite model represents the polling sites in the system
+## PollingSite
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 255
+  - Description: The name of the polling site.
+- **address**
+  - Type: TextField
+  - Description: The address of the polling site.
+- **state**
+  - Type: ForeignKey
+  - Related Model: State
+  - On Delete: CASCADE
+  - Description: The state where the polling site is located.
+- **county**
+  - Type: ForeignKey
+  - Related Model: County
+  - On Delete: CASCADE
+  - Description: The county where the polling site is located.
+- **city_or_town**
+  - Type: ForeignKey
+  - Related Model: CityOrTown
+  - On Delete: CASCADE
+  - Description: The city or town where the polling site is located.
+- **contact_person**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The contact person for the polling site.
+- **team_leader**
+  - Type: ForeignKey
+  - Related Model: User
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The assigned team leader for the polling site.
+- **risk_assessment**
+  - Type: OneToOneField
+  - Related Model: Assessment
+  - Null: true
+  - Blank: true
+  - On Delete: SET_NULL
+  - Description: The risk assessment associated with the polling site.
+- **site_type**
+  - Type: CharField
+  - Max Length: 50
+  - Choices:
+    - "regular"
+    - "early_voting"
+    - "drop_off"
+    - "mobile"
+  - Default: "regular"
+  - Description: The type of polling site (regular, early voting, drop-off, mobile).
+
+# State model represents the states
+## State
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 100
+  - Unique: true
+  - Description: The name of the state.
+
+# County model represents the counties within a state
+## County
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 100
+  - Description: The name of the county.
+- **state**
+  - Type: ForeignKey
+  - Related Model: State
+  - On Delete: CASCADE
+  - Description: The state to which the county belongs.
+
+# CityOrTown model represents the cities or towns within a county
+## CityOrTown
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 100
+  - Description: The name of the city or town.
+- **county**
+  - Type: ForeignKey
+  - Related Model: County
+  - On Delete: CASCADE
+  - Description: The county to which the city or town belongs.
+
+# UserPollingSitePermission model represents the permissions a user has for a polling site
+## UserPollingSitePermission
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the permission.
+- **polling_site**
+  - Type: ForeignKey
+  - Related Model: PollingSite
+  - On Delete: CASCADE
+  - Description: The polling site associated with the permission.
+- **permission**
+  - Type: CharField
+  - Max Length: 20
+  - Choices:
+    - "read"
+    - "write"
+  - Description: The permission level assigned to the user for the polling site.
+
+### Meta
+- **unique_together**
+  - Fields: ('user', 'polling_site', 'permission')
+  - Description: Ensures that the combination of user, polling site, and permission is unique.
+
+========================================
+Folder: ./Docs/apps/PollingSite/View
+Python django File: ./Docs/apps/PollingSite/View/PollingSite_views.md
+# PollingSiteListView
+- Description: Displays a list of polling sites.
+- URL: `/polling-sites/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with a list of polling sites.
+
+# PollingSiteDetailView
+- Description: Shows detailed information about a specific polling site.
+- URL: `/polling-sites/<polling_site_id>/`
+- HTTP Method: GET
+- Request Parameters:
+  - `polling_site_id`: The ID of the polling site to display.
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with detailed information about the polling site.
+
+# PollingSiteCreateView
+- Description: Allows authorized users to create a new polling site.
+- URL: `/polling-sites/create/`
+- HTTP Method: GET, POST
+- Request Parameters: None
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a form to create a new polling site.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/polling-sites/<new_polling_site_id>/`
+
+# PollingSiteUpdateView
+- Description: Allows authorized users to update the details of a polling site.
+- URL: `/polling-sites/<polling_site_id>/update/`
+- HTTP Method: GET, POST
+- Request Parameters:
+  - `polling_site_id`: The ID of the polling site to update.
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a form to update the polling site details.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/polling-sites/<polling_site_id>/`
+
+# PollingSiteDeleteView
+- Description: Allows authorized users to delete a polling site.
+- URL: `/polling-sites/<polling_site_id>/delete/`
+- HTTP Method: GET, POST
+- Request Parameters:
+  - `polling_site_id`: The ID of the polling site to delete.
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a confirmation prompt to delete the polling site.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/polling-sites/`
+
+========================================
+Folder: ./Docs/apps/PollingSite/Form
+Python django File: ./Docs/apps/PollingSite/Form/PollingSite_forms.md
+# PollingSiteForm for creating and updating polling sites
+## PollingSiteForm
+### Fields
+- **name**
+  - Type: CharField
+  - Widget: TextInput
+  - Description: The name of the polling site.
+- **address**
+  - Type: CharField
+  - Widget: Textarea
+  - Description: The address of the polling site.
+- **state**
+  - Type: ModelChoiceField
+  - Queryset: State.objects.all()
+  - Description: The state where the polling site is located.
+- **county**
+  - Type: ModelChoiceField
+  - Queryset: County.objects.all()
+  - Description: The county where the polling site is located.
+- **city_or_town**
+  - Type: ModelChoiceField
+  - Queryset: CityOrTown.objects.all()
+  - Description: The city or town where the polling site is located.
+- **contact_person**
+  - Type: ModelChoiceField
+  - Queryset: User.objects.all()
+  - Required: false
+  - Description: The contact person for the polling site.
+- **team_leader**
+  - Type: ModelChoiceField
+  - Queryset: User.objects.all()
+  - Required: false
+  - Description: The assigned team leader for the polling site.
+- **site_type**
+  - Type: ChoiceField
+  - Choices: PollingSite.SITE_TYPE_CHOICES
+  - Description: The type of polling site.
+
+========================================
+Folder: ./Docs/apps/User/Model
+Python django File: ./Docs/apps/User/Model/User.md
+# User model represents the users of the system
+## User
+### Fields
+- **username**
+  - Type: CharField
+  - Max Length: 150
+  - Unique: true
+  - Description: Required. 150 characters or fewer. Letters, digits, and @/./+/-/_ only.
+- **email**
+  - Type: EmailField
+  - Unique: true
+  - Description: Required. A valid email address.
+- **password**
+  - Type: CharField
+  - Max Length: 128
+  - Description: Required. The hashed password.
+- **first_name**
+  - Type: CharField
+  - Max Length: 30
+  - Blank: true
+  - Description: Optional. 30 characters or fewer.
+- **last_name**
+  - Type: CharField
+  - Max Length: 150
+  - Blank: true
+  - Description: Optional. 150 characters or fewer.
+- **is_active**
+  - Type: BooleanField
+  - Default: true
+  - Description: Designates whether this user should be treated as active.
+- **is_staff**
+  - Type: BooleanField
+  - Default: false
+  - Description: Designates whether the user can log into the admin site.
+- **is_superuser**
+  - Type: BooleanField
+  - Default: false
+  - Description: Designates that this user has all permissions without explicitly assigning them.
+- **date_joined**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The date and time when the user account was created.
+- **last_login**
+  - Type: DateTimeField
+  - Null: true
+  - Blank: true
+  - Description: The last date and time when the user logged in.
+- **assessments**
+  - Type: ManyToManyField
+  - Related Model: Assessment
+  - Through: UserAssessment
+  - Description: The assessments the user is associated with.
+- **auto_accept_invites**
+  - Type: BooleanField
+  - Default: false
+  - Description: Indicates whether the user automatically accepts assessment invitations.
+- **role**
+  - Type: ForeignKey
+  - Related Model: UserRole
+  - On Delete: CASCADE
+  - Description: The role assigned to the user.
+
+### Methods
+- **__str__**
+  - Description: Returns the username as the string representation of the user.
+- **get_full_name**
+  - Description: Returns the first_name plus the last_name, with a space in between.
+- **get_short_name**
+  - Description: Returns the short name for the user (typically the first name).
+
+# UserRole model represents the roles assigned to users
+## UserRole
+### Fields
+- **name**
+  - Type: CharField
+  - Max Length: 50
+  - Unique: true
+  - Description: The name of the role (e.g., Site Leader, Assessor, Reviewer, Admin).
+- **permissions**
+  - Type: JSONField
+  - Description: The permissions associated with the role, stored as a JSON object.
+
+# Comment model represents comments or discussions related to an assessment or a specific question
+## Comment
+### Fields
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment associated with the comment.
+- **question**
+  - Type: ForeignKey
+  - Related Model: AssessmentQuestion
+  - Null: true
+  - Blank: true
+  - On Delete: CASCADE
+  - Description: The specific question associated with the comment.
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who made the comment.
+- **content**
+  - Type: TextField
+  - Description: The content of the comment.
+- **created_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the comment was created.
+
+NotificationPreference model represents the notification preferences for a user
+NotificationPreference
+Fields
+
+user
+
+Type: OneToOneField
+Related Model: User
+On Delete: CASCADE
+Description: The user associated with the notification preference.
+
+
+email_enabled
+
+Type: BooleanField
+Default: true
+Description: Indicates whether email notifications are enabled for the user.
+
+
+sms_enabled
+
+Type: BooleanField
+Default: false
+Description: Indicates whether SMS notifications are enabled for the user.
+
+
+notification_types
+
+Type: JSONField
+Description: The types of notifications the user wants to receive, stored as a JSON object.
+
+========================================
+Folder: ./Docs/apps/User/View
+Python django File: ./Docs/apps/User/View/User_views.md
+# CommentCreateView
+- Description: Creates a new comment for an assessment or a specific question.
+- URL: `/comments/create/`
+- HTTP Method: POST
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment associated with the comment.
+  - `question_id`: (Optional) The ID of the specific question associated with the comment.
+  - `content`: The content of the comment.
+- Response:
+  - HTTP Status Code: 201 (Created)
+  - Content: The created comment in JSON format.
+
+# CommentListView
+- Description: Retrieves a list of comments for an assessment or a specific question.
+- URL: `/comments/`
+- HTTP Method: GET
+- Request Parameters:
+  - `assessment_id`: The ID of the assessment to retrieve comments for.
+  - `question_id`: (Optional) The ID of the specific question to retrieve comments for.
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: List of comments in JSON format.
+
+# UserProfileView
+- Description: Displays the user's profile information.
+- URL: `/profile/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with the user's profile information.
+
+# UserUpdateView
+- Description: Allows users to update their profile information.
+- URL: `/profile/update/`
+- HTTP Method: GET, POST
+- Request Parameters: None
+- Response:
+  - GET:
+    - HTTP Status Code: 200 (OK)
+    - Content: Rendered HTML template with a form to update the user's profile information.
+  - POST:
+    - HTTP Status Code: 302 (Found)
+    - Redirect: `/profile/`
+
+# UserAssessmentListView
+- Description: Shows a list of assessments the user is associated with.
+- URL: `/profile/assessments/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with a list of assessments the user is associated with.
+
+# UserInvitationListView
+- Description: Displays the list of assessment invitations received by the user.
+- URL: `/profile/invitations/`
+- HTTP Method: GET
+- Request Parameters: None
+- Response:
+  - HTTP Status Code: 200 (OK)
+  - Content: Rendered HTML template with a list of assessment invitations received by the user.
+
+# AcceptInvitationView
+- Description: Allows users to accept an assessment invitation.
+- URL: `/invitations/<invitation_id>/accept/`
+- HTTP Method: POST
+- Request Parameters:
+  - `invitation_id`: The ID of the invitation to accept.
+- Response:
+  - HTTP Status Code: 302 (Found)
+  - Redirect: `/profile/assessments/`
+
+# DeclineInvitationView
+- Description: Allows users to decline an assessment invitation.
+- URL: `/invitations/<invitation_id>/decline/`
+- HTTP Method: POST
+- Request Parameters:
+  - `invitation_id`: The ID of the invitation to decline.
+- Response:
+  - HTTP Status Code: 302 (Found)
+  - Redirect: `/profile/invitations/`
+
+NotificationPreferenceUpdateView
+
+Description: Allows users to update their notification preferences.
+URL: /profile/notifications/update/
+HTTP Method: GET, POST
+Request Parameters: None
+Response:
+
+GET:
+
+HTTP Status Code: 200 (OK)
+Content: Rendered HTML template with a form to update the user's notification preferences.
+
+
+POST:
+
+HTTP Status Code: 302 (Found)
+Redirect: /profile/notifications/
+
+
+
+
+
+NotificationListView
+
+Description: Retrieves a list of notifications for the authenticated user.
+URL: /notifications/
+HTTP Method: GET
+Request Parameters: None
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: List of notifications in JSON format.
+
+========================================
+Folder: ./Docs/apps/User/Form
+Python django File: ./Docs/apps/User/Form/User_forms.md
+# UserRegistrationForm for user registration
+## UserRegistrationForm
+### Fields
+- **username**
+  - Type: CharField
+  - Widget: TextInput
+  - Description: The username of the user.
+- **email**
+  - Type: EmailField
+  - Widget: EmailInput
+  - Description: The email address of the user.
+- **password1**
+  - Type: CharField
+  - Widget: PasswordInput
+  - Description: The password of the user.
+- **password2**
+  - Type: CharField
+  - Widget: PasswordInput
+  - Description: The password confirmation.
+- **first_name**
+  - Type: CharField
+  - Widget: TextInput
+  - Required: false
+  - Description: The first name of the user.
+- **last_name**
+  - Type: CharField
+  - Widget: TextInput
+  - Required: false
+  - Description: The last name of the user.
+- **auto_accept_invites**
+  - Type: BooleanField
+  - Description: Indicates whether the user automatically accepts assessment invitations.
+- **role**
+  - Type: ModelChoiceField
+  - Queryset: UserRole.objects.all()
+  - Description: The role assigned to the user.
+
+# UserUpdateForm for updating user profile
+## UserUpdateForm
+### Fields
+- **first_name**
+  - Type: CharField
+  - Widget: TextInput
+  - Required: false
+  - Description: The first name of the user.
+- **last_name**
+  - Type: CharField
+  - Widget: TextInput
+  - Required: false
+  - Description: The last name of the user.
+- **email**
+  - Type: EmailField
+  - Widget: EmailInput
+  - Description: The email address of the user.
+- **auto_accept_invites**
+  - Type: BooleanField
+  - Description: Indicates whether the user automatically accepts assessment invitations.
+- **role**
+  - Type: ModelChoiceField
+  - Queryset: UserRole.objects.all()
+  - Description: The role assigned to the user.
+
+# CommentForm for creating comments
+## CommentForm
+### Fields
+- **content**
+  - Type: CharField
+  - Widget: Textarea
+  - Description: The content of the comment.
+
+NotificationPreferenceForm for updating notification preferences
+NotificationPreferenceForm
+Fields
+
+email_enabled
+
+Type: BooleanField
+Description: Indicates whether email notifications are enabled for the user.
+
+
+sms_enabled
+
+Type: BooleanField
+Description: Indicates whether SMS notifications are enabled for the user.
+
+
+notification_types
+
+Type: MultipleChoiceField
+Choices:
+
+"assessment_invitation"
+"assessment_approval"
+"assessment_deadline"
+
+
+Description: The types of notifications the user wants to receive.
+
+========================================

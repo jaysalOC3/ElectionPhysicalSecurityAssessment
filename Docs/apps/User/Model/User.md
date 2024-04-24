@@ -107,3 +107,34 @@
   - Type: DateTimeField
   - Auto Now Add: true
   - Description: The timestamp of when the comment was created.
+
+NotificationPreference model represents the notification preferences for a user
+NotificationPreference
+Fields
+
+user
+
+Type: OneToOneField
+Related Model: User
+On Delete: CASCADE
+Description: The user associated with the notification preference.
+
+
+email_enabled
+
+Type: BooleanField
+Default: true
+Description: Indicates whether email notifications are enabled for the user.
+
+
+sms_enabled
+
+Type: BooleanField
+Default: false
+Description: Indicates whether SMS notifications are enabled for the user.
+
+
+notification_types
+
+Type: JSONField
+Description: The types of notifications the user wants to receive, stored as a JSON object.

@@ -80,3 +80,37 @@
 - Response:
   - HTTP Status Code: 302 (Found)
   - Redirect: `/profile/invitations/`
+
+NotificationPreferenceUpdateView
+
+Description: Allows users to update their notification preferences.
+URL: /profile/notifications/update/
+HTTP Method: GET, POST
+Request Parameters: None
+Response:
+
+GET:
+
+HTTP Status Code: 200 (OK)
+Content: Rendered HTML template with a form to update the user's notification preferences.
+
+
+POST:
+
+HTTP Status Code: 302 (Found)
+Redirect: /profile/notifications/
+
+
+
+
+
+NotificationListView
+
+Description: Retrieves a list of notifications for the authenticated user.
+URL: /notifications/
+HTTP Method: GET
+Request Parameters: None
+Response:
+
+HTTP Status Code: 200 (OK)
+Content: List of notifications in JSON format.

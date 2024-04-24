@@ -4,9 +4,13 @@ import os
 folder_paths = [
     "./Docs/apps/Assessment/Model",
     "./Docs/apps/Assessment/View",
+    "./Docs/apps/Assessment/Form",
     "./Docs/apps/PollingSite/Model",
     "./Docs/apps/PollingSite/View",
+    "./Docs/apps/PollingSite/Form",
     "./Docs/apps/User/Model",
+    "./Docs/apps/User/View",
+    "./Docs/apps/User/Form",
     # Add more folder paths as needed
 ]
 
@@ -25,7 +29,7 @@ def print_file_contents(file_path):
             file_contents = file.read()
         
         # Print the file name and its contents
-        print(f"File: {file_path}")
+        print(f"Python django File: {file_path}")
         print(file_contents)
         print()  # Print an empty line for separation
     else:
