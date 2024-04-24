@@ -79,3 +79,31 @@
 - **permissions**
   - Type: JSONField
   - Description: The permissions associated with the role, stored as a JSON object.
+
+# Comment model represents comments or discussions related to an assessment or a specific question
+## Comment
+### Fields
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment associated with the comment.
+- **question**
+  - Type: ForeignKey
+  - Related Model: AssessmentQuestion
+  - Null: true
+  - Blank: true
+  - On Delete: CASCADE
+  - Description: The specific question associated with the comment.
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who made the comment.
+- **content**
+  - Type: TextField
+  - Description: The content of the comment.
+- **created_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the comment was created.

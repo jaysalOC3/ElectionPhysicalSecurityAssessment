@@ -268,3 +268,45 @@
   - Type: DateTimeField
   - Auto Now Add: true
   - Description: The timestamp of when the attachment was uploaded.
+
+# Report model represents a generated report for an assessment
+## Report
+### Fields
+- **assessment**
+  - Type: ForeignKey
+  - Related Model: Assessment
+  - On Delete: CASCADE
+  - Description: The assessment associated with the report.
+- **generated_by**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user who generated the report.
+- **generated_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the report was generated.
+- **report_file**
+  - Type: FileField
+  - Upload To: 'reports/'
+  - Description: The generated report file.
+
+# Notification model represents notifications sent to users
+## Notification
+### Fields
+- **user**
+  - Type: ForeignKey
+  - Related Model: User
+  - On Delete: CASCADE
+  - Description: The user associated with the notification.
+- **message**
+  - Type: TextField
+  - Description: The notification message.
+- **created_at**
+  - Type: DateTimeField
+  - Auto Now Add: true
+  - Description: The timestamp of when the notification was created.
+- **is_read**
+  - Type: BooleanField
+  - Default: false
+  - Description: Indicates whether the notification has been read by the user.

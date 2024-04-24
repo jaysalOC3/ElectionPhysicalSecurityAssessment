@@ -2,7 +2,11 @@ import os
 
 # List of folder paths
 folder_paths = [
-    "./Docs/Models/",
+    "./Docs/apps/Assessment/Model",
+    "./Docs/apps/Assessment/View",
+    "./Docs/apps/PollingSite/Model",
+    "./Docs/apps/PollingSite/View",
+    "./Docs/apps/User/Model",
     # Add more folder paths as needed
 ]
 
