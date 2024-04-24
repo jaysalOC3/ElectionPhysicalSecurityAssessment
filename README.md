@@ -1,3 +1,5 @@
+LLM_API_KEY=sk-proj-bbPRAFoVHPEqnFUobwK1T3BlbkFJ09TTGQSy61WlLb2kI27u
+
 # Polling Place Security Assessment App
 ## Purpose
 Ensuring the physical security of polling places is critical to protecting the integrity of our elections. However, many election site leaders, often volunteers, lack the time, tools, and training to thoroughly assess their facilities. That's where our Polling Place Security Assessment App comes in.
