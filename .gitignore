@@ -4,3 +4,6 @@ __pycache__/
 
 # .plandex directory there for light project-level config.
 .plandex/
+
+# App SQLite3 DB
+*.sqlite3
