@@ -1,0 +1,108 @@
+Overview
+1.1. Purpose
+Objective: Enable election site leaders to conduct comprehensive on-site security evaluations at polling places.
+Challenges Addressed: Time constraints, lack of tools, and insufficient training for volunteers responsible for facility assessments.
+Target Users: Election site leaders overseeing the physical security of polling places.
+1.2. Features
+Intuitive Interface: Guides users through the security assessment process.
+Data Collection: Facilitates efficient gathering of facility data, documentation of safeguards, and identification of vulnerabilities.
+Collaborative Features: Supports secure collaboration among site staff for collective assessments.
+Reporting: Generates detailed reports with recommendations to enhance physical security, adhering to CISA guidelines and best practices.
+1.3. Models
+Core Models: Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse, UserAssessmentPermission.
+Supporting Models: Includes AssessmentSection, Attachment, Report, designed to support comprehensive functionality from collaboration to version control.
+
+Assessment App
+2.1. Assessment
+Attributes: id, name, description, created_at, updated_at, status (draft, submitted, approved), due_date.
+Endpoint: /assessments/{id}/
+Permissions: Admins can edit and submit. Election site leaders can edit drafts and submit for approval.
+2.2. UserAssessment
+Attributes: id, user_id (ForeignKey to User), assessment_id (ForeignKey to Assessment), role (owner, collaborator).
+Endpoint: /user-assessments/{id}/
+Permissions: Owners can edit and submit. Collaborators can view and edit but cannot submit.
+2.3. AssessmentQuestion
+Attributes: id, assessment_id (ForeignKey), question_text, question_type (multiple_choice, text, checkbox), order, required.
+Endpoint: /assessment-questions/{id}/
+Permissions: Editable by users who have edit permissions on the linked assessment.
+2.4. AssessmentResponse
+Attributes: id, user_assessment_id (ForeignKey), assessment_question_id (ForeignKey), response_text, response_option_id (ForeignKey, if applicable).
+Endpoint: /assessment-responses/{id}/
+Permissions: Responses can be edited by the assigned user.
+2.5. UserAssessmentPermission
+Attributes: id, user_assessment_id (ForeignKey), permission_type (view, edit, submit).
+Endpoint: /user-assessment-permissions/{id}/
+Permissions: Specifies who can view, edit, or submit assessments and responses.
+
+User Management App
+3.1. User
+Attributes: id, username, email, password (hashed), first_name, last_name, role_id (ForeignKey to UserRole), created_at, updated_at.
+Endpoint: /users/{id}/
+3.2. UserRole
+Attributes: id, name (admin, analyst, collaborator).
+Endpoint: /user-roles/{id}/
+3.3. Comment
+Attributes: id, user_id (ForeignKey), assessment_id (ForeignKey), parent_comment_id (ForeignKey for nested comments), content, created_at, updated_at.
+Endpoint: /comments/{id}/
+3.4. NotificationPreference
+Attributes: id, user_id (ForeignKey), notification_type (email, sms, push), frequency (immediate, daily, weekly).
+Endpoint: /notification-preferences/{id}/
+
+Polling Site App
+4.1. PollingSite
+Attributes: id, name, address, city_or_town_id (ForeignKey), state_id (ForeignKey), zip_code, latitude, longitude.
+Endpoint: /polling-sites/{id}/
+4.2. State
+Attributes: id, name, code (e.g., "CA", "NY").
+Endpoint: /states/{id}/
+4.3. County
+Attributes: id, name, state_id (ForeignKey).
+Endpoint: /counties/{id}/
+4.4. CityOrTown
+Attributes: id, name, county_id (ForeignKey).
+Endpoint: /cities-or-towns/{id}/
+
+User Feedback Collection
+5.1. Models
+UserFeedback: Represents feedback provided by users regarding their experience using the app.
+Attributes: id, user_id (ForeignKey), content, category (e.g., "usability", "functionality", "bug report"), created_at, updated_at.
+5.2. Views
+FeedbackCreateView: Allows users to submit feedback directly through the app.
+FeedbackListView: Enables administrators to view all feedback submitted by users.
+5.3. Forms
+UserFeedbackForm: Form for creating and submitting feedback.
+
+Reporting and Analytics App
+6.1. CustomReport
+Attributes: id, user_id (ForeignKey), name, description, query (e.g., SQL query), created_at, updated_at.
+Endpoint: /custom-reports/{id}/
+6.2. CustomDashboard
+Attributes: id, user_id (ForeignKey), name, description, layout (JSON representing the dashboard layout), created_at, updated_at.
+Endpoint: /custom-dashboards/{id}/
+
+Integration and Communication
+7.1. Integration
+Attributes: id, user_id (ForeignKey), platform (e.g., "slack", "ms_teams"), access_token, created_at, updated_at.
+Endpoint: /integrations/{id}/
+
+Administrative and Compliance Reporting
+8.1. Models
+ComplianceReport: Stores compliance reports for regulatory requirements.
+Attributes: id, assessment_id (ForeignKey), report_data (text, potentially JSON or XML), created_at, updated_at.
+8.2. Views
+ComplianceReportCreateView: Allows authorized users to generate compliance reports.
+ComplianceReportListView: Displays a list of compliance reports.
+ComplianceReportDetailView: Shows detailed information about specific compliance reports.
+8.3. Forms
+ComplianceReportForm: Form for generating and editing compliance reports.
+
+Advanced User Management
+9.1. Models
+UserActivityLog: Tracks user actions within the app.
+Attributes: id, user_id (ForeignKey), action, timestamp.
+9.2. Views
+UserActivityLogListView: Provides a view of user activities.
+UserRoleUpdateView: Updates user roles and permissions.
+UserActivityDetailView: Shows detailed user activity information.
+9.3. Forms
+UserRoleForm: Form for updating user roles and permissions.
