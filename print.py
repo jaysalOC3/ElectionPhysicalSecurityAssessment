@@ -2,21 +2,18 @@ import os
 
 # List of folder paths
 folder_paths = [
-    "./Docs/apps/Assessment/Model",
-    "./Docs/apps/Assessment/View",
-    "./Docs/apps/Assessment/Form",
-    "./Docs/apps/PollingSite/Model",
-    "./Docs/apps/PollingSite/View",
-    "./Docs/apps/PollingSite/Form",
-    "./Docs/apps/User/Model",
-    "./Docs/apps/User/View",
-    "./Docs/apps/User/Form",
+    "./EPSA/assessment_app",
+    "./EPSA/polling_site_app",
+    "./EPSA/user_feedback_app",
+    "./EPSA/user_management_app",
+    "./EPSA/admin_compliance_app",
+    "./EPSA/adv_user_management_app",
     # Add more folder paths as needed
 ]
 
 # List of individual file paths
 individual_files = [
-    "README.md",
+    # "README.md",
     # Add more individual file paths as needed
 ]
 
@@ -29,7 +26,7 @@ def print_file_contents(file_path):
             file_contents = file.read()
         
         # Print the file name and its contents
-        print(f"Python django File: {file_path}")
+        print(f"========== Python django File: {file_path}")
         print(file_contents)
         print()  # Print an empty line for separation
     else:
