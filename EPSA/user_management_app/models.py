@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from assessment_app.models import Assessment
+
 class UserRole(models.Model):
     name = models.CharField(max_length=50)  # e.g., admin, analyst, collaborator
 
