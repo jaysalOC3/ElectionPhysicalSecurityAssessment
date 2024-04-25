@@ -3,6 +3,16 @@ from django.contrib.auth.decorators import login_required
 from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse
 from .forms import AssessmentForm, AssessmentResponseForm 
 
+def index(request):
+    assessments = Assessment.objects.all()  # Fetch all assessments
+    # Add any other data you want to pass to the template
+
+    context = {
+        'assessments': assessments,
+        # ... other context variables
+    }
+    return render(request, 'assessment_app/index.html', context)
+
 @login_required
 def create_assessment(request):
     if request.method == 'POST':

@@ -3,12 +3,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import UserRole  # Assuming you have a UserRole model
 
-# Custom user creation form (extends the built-in UserCreationForm)
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=150, required=True)
+    last_name = forms.CharField(max_length=150, required=True)
+    password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput, required=True)
 
     class Meta(UserCreationForm.Meta):
-        fields = UserCreationForm.Meta.fields + ('email',)
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email', 'first_name', 'last_name')
+
 
 # Custom login form
 class LoginForm(forms.Form):

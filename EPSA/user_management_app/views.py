@@ -13,7 +13,7 @@ def register(request):
             # Optionally assign a default role to the user
             # user.userrole_set.create(role='default_role_name')
             login(request, user)
-            return redirect('home')  # Redirect to the desired page after successful registration
+            return redirect('index')  # Redirect to the desired page after successful registration
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
@@ -28,7 +28,7 @@ def user_login(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('home')  # Redirect to the desired page after successful login
+                return redirect('index')  # Redirect to the desired page after successful login
     else:
         form = LoginForm()
     return render(request, 'registration/login.html', {'form': form})
@@ -48,7 +48,7 @@ def user_profile(request):
 # Logout view
 def logout_view(request):
     logout(request)
-    return redirect('home')  # Redirect to the desired page after logout
+    return redirect('index')  # Redirect to the desired page after logout
 
 # Optional: User role management views
 def manage_user_roles(request):

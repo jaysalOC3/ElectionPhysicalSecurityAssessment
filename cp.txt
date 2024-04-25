@@ -82,7 +82,7 @@ ROOT_URLCONF = "EPSA.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -177,6 +177,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("assessment_app.urls")),
     path("", include("user_management_app.urls")),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
 
 
@@ -206,6 +207,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse
 from .forms import AssessmentForm, AssessmentResponseForm 
+
+def index(request):
+    assessments = Assessment.objects.all()  # Fetch all assessments
+    # Add any other data you want to pass to the template
+
+    context = {
+        'assessments': assessments,
+        # ... other context variables
+    }
+    return render(request, 'assessment_app/index.html', context)
 
 @login_required
 def create_assessment(request):
@@ -387,6 +398,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('', views.index, name='index'),  # Add the index page URL pattern
     path('assessments/create/', views.create_assessment, name='create_assessment'),
     path('assessments/<int:pk>/', views.assessment_detail, name='assessment_detail'),
     path('assessments/<int:pk>/edit/', views.edit_assessment, name='edit_assessment'),
@@ -466,6 +478,35 @@ Folder: ./EPSA/assessment_app/templates/assessment_app
     <a href="{% url 'answer_questions' assessment.pk %}">Answer Questions</a>
   {% endif %}
 
+{% endblock %}
+
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/index.html
+{% extends 'base.html' %}  <!-- Assuming you have a base template -->
+
+{% block content %}
+  <h1>Welcome to the Assessment App!</h1>
+
+  {% if user.is_authenticated %}
+    <p>Logged in as: {{ user.username }}</p>
+  {% else %}
+    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a> to get started.</p>
+  {% endif %}
+
+  <h2>Assessments:</h2>
+  <ul>
+    {% for assessment in assessments %}
+      <li>
+        <a href="{% url 'assessment_detail' assessment.pk %}">{{ assessment.name }}</a> - 
+        Status: {{ assessment.status }} - 
+        Due Date: {{ assessment.due_date }}
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if user.is_authenticated %}
+    <a href="{% url 'create_assessment' %}">Create New Assessment</a>
+    <a href="{% url 'user_profile' %}">My Profile</a>
+  {% endif %}
 {% endblock %}
 
 ========== Python django File: ./EPSA/assessment_app/templates/assessment_app/create_assessment.html
@@ -728,6 +769,8 @@ from django.test import TestCase
 from django.db import models
 from django.contrib.auth.models import User
 
+from assessment_app.models import Assessment
+
 class UserRole(models.Model):
     name = models.CharField(max_length=50)  # e.g., admin, analyst, collaborator
 
@@ -770,10 +813,32 @@ admin.site.register(NotificationPreference)
 ========================================
 Folder: ./EPSA/user_management_app/templates/registration
 ========== Python django File: ./EPSA/user_management_app/templates/registration/login.html
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>
 
 ========== Python django File: ./EPSA/user_management_app/templates/registration/logged_out.html
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logged Out</title>
+</head>
+<body>
+    <h1>You have been logged out.</h1>
+    <a href="{% url 'login' %}">Log in again</a>
+</body>
+</html>
 
 ========== Python django File: ./EPSA/user_management_app/templates/registration/password_reset_complete.html
 
@@ -785,10 +850,36 @@ Folder: ./EPSA/user_management_app/templates/registration
 
 
 ========== Python django File: ./EPSA/user_management_app/templates/registration/register.html
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register</button>
+    </form>
+</body>
+</html>
 
 ========== Python django File: ./EPSA/user_management_app/templates/registration/profile.html
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+</head>
+<body>
+    <h1>Edit Profile</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Changes</button>
+    </form>
+</body>
+</html>
 
 ========== Python django File: ./EPSA/user_management_app/templates/registration/password_reset_form.html
 
