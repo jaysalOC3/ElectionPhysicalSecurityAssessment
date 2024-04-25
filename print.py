@@ -2,10 +2,13 @@ import os
 
 # List of folder paths
 folder_paths = [
+    "./EPSA/EPSA",
     "./EPSA/assessment_app",
+    "./EPSA/assessment_app/templates/assessment_app",
     "./EPSA/polling_site_app",
     "./EPSA/user_feedback_app",
     "./EPSA/user_management_app",
+    "./EPSA/user_management_app/templates/registration",
     "./EPSA/admin_compliance_app",
     "./EPSA/adv_user_management_app",
     # Add more folder paths as needed
@@ -14,6 +17,7 @@ folder_paths = [
 # List of individual file paths
 individual_files = [
     # "README.md",
+    #"./EPSA/EPSA/settings.py",
     # Add more individual file paths as needed
 ]
 

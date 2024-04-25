@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Answer Questions for: {{ assessment.name }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% for form in forms %}
+      <div>
+        {{ form.as_p }} 
+      </div>
+    {% endfor %}
+    <button type="submit">Submit Answers</button>
+  </form>
+{% endblock %}
