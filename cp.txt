@@ -235,26 +235,39 @@ def create_assessment(request):
 
 @login_required
 def assessment_detail(request, pk):
+    # Retrieve the Assessment or return 404 if not found
     assessment = get_object_or_404(Assessment, pk=pk)
+
+    # Retrieve UserAssessment or return 404 if not found
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
 
-    # Check permissions
-    can_edit = user_assessment.role == 'owner' or user_assessment.has_permission('edit')
-    can_submit = user_assessment.role == 'owner' or user_assessment.has_permission('submit')
-    can_view_responses = user_assessment.role == 'owner' or user_assessment.has_permission('view_responses')
+    # Helper function to determine if the user can perform certain actions
+    def can_perform(action):
+        return user_assessment.role == 'owner' or user_assessment.has_permission(action)
 
-    # Get questions and responses (if applicable)
-    questions = AssessmentQuestion.objects.filter(assessment=assessment)
+    # Determine the permissions of the user
+    can_edit = can_perform('edit')
+    can_submit = can_perform('submit')
+    can_view_responses = can_perform('view_responses')
+
+    # Fetch questions associated through collections linked to the assessment
+    questions = AssessmentQuestion.objects.filter(collection__assessment=assessment)
+
+    # Fetch responses if the user has permission to view them
     responses = AssessmentResponse.objects.filter(user_assessment=user_assessment) if can_view_responses else None
 
-    return render(request, 'assessment_app/assessment_detail.html', {
+    # Prepare the context for rendering
+    context = {
         'assessment': assessment,
         'questions': questions,
         'responses': responses,
         'can_edit': can_edit,
         'can_submit': can_submit,
         'can_view_responses': can_view_responses,
-    }) 
+    }
+
+    # Render the page with the given context
+    return render(request, 'assessment_app/assessment_detail.html', context)
 
 @login_required
 def edit_assessment(request, pk):
@@ -359,6 +372,17 @@ from django.test import TestCase
 ========== Python django File: ./EPSA/assessment_app/models.py
 from django.db import models
 from django.contrib.auth.models import User
+import django.db.utils
+
+# Permission choices for UserAssessment roles
+permissions = [
+    ('owner', 'Owner'),           # Full access to all features and settings
+    ('admin', 'Administrator'),   # Manage settings, users, and critical components without full ownership rights
+    ('sitelead', 'Site Leader'),   # Access to create and modify responses
+    ('analyst', 'Analyst'),       # Read-only access with the ability to run queries and generate reports
+    ('collaborator', 'Collaborator'), # Access to specific projects or databases for collaboration without admin rights
+    ('guest', 'Guest')            # Very limited access, possibly only to certain data views
+]
 
 class Assessment(models.Model):
     name = models.CharField(max_length=255)
@@ -371,27 +395,75 @@ class Assessment(models.Model):
     def __str__(self):
         return self.name
 
-class UserAssessment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE)
-    role = models.CharField(max_length=50, choices=[('owner', 'Owner'), ('collaborator', 'Collaborator')])
+def get_default_collection():
+    # Try to get the first collection
+    try:
+        collection = AssessmentQuestionCollection.objects.first()
+        if not collection:
+            # No collection found, create a new default collection
+            collection = AssessmentQuestionCollection.objects.create(
+                name="Default Collection",
+                description="Automatically created default collection"
+            )
+        return collection.id
+    except django.db.utils.OperationalError:
+        # This handles the case where this is called during a migration and the table doesn't exist yet
+        return None
+
+class AssessmentQuestionCollection(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.id}"
 
 class AssessmentQuestion(models.Model):
-    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE)
+    collection = models.ForeignKey(
+        'AssessmentQuestionCollection',
+        on_delete=models.CASCADE,
+        related_name='questions',
+        default=get_default_collection,
+        null=True  # Allows the field to be null if no default collection is available at the time
+    )
     question_text = models.TextField()
-    question_type = models.CharField(max_length=50, choices=[('multiple_choice', 'Multiple Choice'), ('text', 'Text'), ('checkbox', 'Checkbox')])
+    question_type = models.CharField(max_length=50, choices=[
+        ('multiple_choice', 'Multiple Choice'), 
+        ('text', 'Text'), 
+        ('checkbox', 'Checkbox')
+    ])
     order = models.IntegerField()
     required = models.BooleanField(default=True)
 
+    def __str__(self):
+        return f"{self.question_text[:50]}..."  # Return first 50 characters if long
+
+class UserAssessment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE, related_name='user_assessments')
+    role = models.CharField(max_length=50, choices=permissions)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.assessment.name}"
+    def has_permission(self, perm_name):
+        return self.permissions.filter(permission_type=perm_name).exists()
+
 class AssessmentResponse(models.Model):
-    user_assessment = models.ForeignKey(UserAssessment, on_delete=models.CASCADE)
-    assessment_question = models.ForeignKey(AssessmentQuestion, on_delete=models.CASCADE)
+    user_assessment = models.ForeignKey(UserAssessment, on_delete=models.CASCADE, related_name='responses')
+    assessment_question = models.ForeignKey(AssessmentQuestion, on_delete=models.CASCADE, related_name='responses')
     response_text = models.TextField(blank=True)
-    # Add response_option if needed for multiple-choice questions
+
+    def __str__(self):
+        return f"Response by {self.user_assessment.user.username} for question {self.assessment_question.question_text[:50]}"
 
 class UserAssessmentPermission(models.Model):
-    user_assessment = models.ForeignKey(UserAssessment, on_delete=models.CASCADE)
+    user_assessment = models.ForeignKey(UserAssessment, on_delete=models.CASCADE, related_name='permissions')
     permission_type = models.CharField(max_length=50, choices=[('view', 'View'), ('edit', 'Edit'), ('submit', 'Submit')])
+
+    def __str__(self):
+        return f"{self.permission_type} - {self.user_assessment.user.username}"
+
 
 ========== Python django File: ./EPSA/assessment_app/urls.py
 from django.urls import path
@@ -408,13 +480,15 @@ urlpatterns = [
 
 ========== Python django File: ./EPSA/assessment_app/admin.py
 from django.contrib import admin
-from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse, UserAssessmentPermission
+from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse, UserAssessmentPermission, AssessmentQuestionCollection
 
 admin.site.register(Assessment)
 admin.site.register(UserAssessment)
 admin.site.register(AssessmentQuestion)
 admin.site.register(AssessmentResponse)
 admin.site.register(UserAssessmentPermission)
+
+admin.site.register(AssessmentQuestionCollection)
 
 
 ========================================
@@ -667,7 +741,7 @@ def register(request):
             # Optionally assign a default role to the user
             # user.userrole_set.create(role='default_role_name')
             login(request, user)
-            return redirect('home')  # Redirect to the desired page after successful registration
+            return redirect('index')  # Redirect to the desired page after successful registration
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
@@ -682,7 +756,7 @@ def user_login(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('home')  # Redirect to the desired page after successful login
+                return redirect('index')  # Redirect to the desired page after successful login
     else:
         form = LoginForm()
     return render(request, 'registration/login.html', {'form': form})
@@ -702,7 +776,7 @@ def user_profile(request):
 # Logout view
 def logout_view(request):
     logout(request)
-    return redirect('home')  # Redirect to the desired page after logout
+    return redirect('index')  # Redirect to the desired page after logout
 
 # Optional: User role management views
 def manage_user_roles(request):
@@ -735,12 +809,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import UserRole  # Assuming you have a UserRole model
 
-# Custom user creation form (extends the built-in UserCreationForm)
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=150, required=True)
+    last_name = forms.CharField(max_length=150, required=True)
+    password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput, required=True)
 
     class Meta(UserCreationForm.Meta):
-        fields = UserCreationForm.Meta.fields + ('email',)
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email', 'first_name', 'last_name')
+
 
 # Custom login form
 class LoginForm(forms.Form):
@@ -798,6 +876,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('MyProfile/', views.user_profile, name='user_profile' )
     # ... other URL patterns for user management 
 ]
 

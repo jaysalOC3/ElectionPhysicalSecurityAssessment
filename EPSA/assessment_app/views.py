@@ -30,26 +30,39 @@ def create_assessment(request):
 
 @login_required
 def assessment_detail(request, pk):
+    # Retrieve the Assessment or return 404 if not found
     assessment = get_object_or_404(Assessment, pk=pk)
+
+    # Retrieve UserAssessment or return 404 if not found
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
 
-    # Check permissions
-    can_edit = user_assessment.role == 'owner' or user_assessment.has_permission('edit')
-    can_submit = user_assessment.role == 'owner' or user_assessment.has_permission('submit')
-    can_view_responses = user_assessment.role == 'owner' or user_assessment.has_permission('view_responses')
+    # Helper function to determine if the user can perform certain actions
+    def can_perform(action):
+        return user_assessment.role == 'owner' or user_assessment.has_permission(action)
 
-    # Get questions and responses (if applicable)
-    questions = AssessmentQuestion.objects.filter(assessment=assessment)
+    # Determine the permissions of the user
+    can_edit = can_perform('edit')
+    can_submit = can_perform('submit')
+    can_view_responses = can_perform('view_responses')
+
+    # Fetch questions associated through collections linked to the assessment
+    questions = assessment.collection.questions.all()  # Access questions through
+
+    # Fetch responses if the user has permission to view them
     responses = AssessmentResponse.objects.filter(user_assessment=user_assessment) if can_view_responses else None
 
-    return render(request, 'assessment_app/assessment_detail.html', {
+    # Prepare the context for rendering
+    context = {
         'assessment': assessment,
         'questions': questions,
         'responses': responses,
         'can_edit': can_edit,
         'can_submit': can_submit,
         'can_view_responses': can_view_responses,
-    }) 
+    }
+
+    # Render the page with the given context
+    return render(request, 'assessment_app/assessment_detail.html', context)
 
 @login_required
 def edit_assessment(request, pk):
@@ -84,7 +97,7 @@ def submit_assessment(request, pk):
 def answer_questions(request, assessment_pk):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
-    questions = AssessmentQuestion.objects.filter(assessment=assessment)
+    questions = assessment.collection.questions.all()  # Access questions through
 
     if request.method == 'POST':
         forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]

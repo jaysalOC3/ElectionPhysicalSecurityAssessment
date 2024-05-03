@@ -14,15 +14,9 @@ class AssessmentResponseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.question = kwargs.pop('question')
         super().__init__(*args, **kwargs)
-        
-        # Customize field based on question type
-        if self.question.question_type == 'multiple_choice':
-            choices = [(o.pk, o.option_text) for o in self.question.options.all()]
-            self.fields['response_text'] = forms.ChoiceField(choices=choices, widget=forms.RadioSelect)
-        elif self.question.question_type == 'checkbox':
-            choices = [(o.pk, o.option_text) for o in self.question.options.all()]
-            self.fields['response_text'] = forms.MultipleChoiceField(choices=choices, widget=forms.CheckboxSelectMultiple)
-
+        if self.question:
+            self.fields['response_text'].label = self.question.question_text
+            self.fields['response_text'].help_text  = self.question.question_help_text
     class Meta:
         model = AssessmentResponse
         fields = ['response_text']
