@@ -18,7 +18,13 @@
     {% for question in questions %}
       <li>{{ question.question_text }}</li>
       {% if responses %}
-        <p>Your Response: {{ responses.get.response_text }}</p> 
+        <ul>
+          {% for response in responses %}
+            {% if response.assessment_question == question %}
+              <li>{{ response.response_text }}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
       {% endif %}
     {% endfor %}
   </ul>

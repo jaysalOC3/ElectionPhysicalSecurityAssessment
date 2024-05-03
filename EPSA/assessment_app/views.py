@@ -30,28 +30,19 @@ def create_assessment(request):
 
 @login_required
 def assessment_detail(request, pk):
-    # Retrieve the Assessment or return 404 if not found
     assessment = get_object_or_404(Assessment, pk=pk)
-
-    # Retrieve UserAssessment or return 404 if not found
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
 
-    # Helper function to determine if the user can perform certain actions
     def can_perform(action):
         return user_assessment.role == 'owner' or user_assessment.has_permission(action)
 
-    # Determine the permissions of the user
     can_edit = can_perform('edit')
     can_submit = can_perform('submit')
     can_view_responses = can_perform('view_responses')
 
-    # Fetch questions associated through collections linked to the assessment
-    questions = assessment.collection.questions.all()  # Access questions through
-
-    # Fetch responses if the user has permission to view them
+    questions = assessment.collection.questions.all()
     responses = AssessmentResponse.objects.filter(user_assessment=user_assessment) if can_view_responses else None
 
-    # Prepare the context for rendering
     context = {
         'assessment': assessment,
         'questions': questions,
@@ -61,7 +52,6 @@ def assessment_detail(request, pk):
         'can_view_responses': can_view_responses,
     }
 
-    # Render the page with the given context
     return render(request, 'assessment_app/assessment_detail.html', context)
 
 @login_required
@@ -97,17 +87,18 @@ def submit_assessment(request, pk):
 def answer_questions(request, assessment_pk):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
-    questions = assessment.collection.questions.all()  # Access questions through
+    questions = assessment.collection.questions.all()
 
     if request.method == 'POST':
         forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]
         if all(form.is_valid() for form in forms):
-            for form in forms:
+            for form, question in zip(forms, questions):
                 response = form.save(commit=False)
                 response.user_assessment = user_assessment
+                response.assessment_question = question  # Assign the assessment_question
                 response.save()
-            return redirect('assessment_detail', pk=assessment.pk) 
+            return redirect('assessment_detail', pk=assessment.pk)
     else:
         forms = [AssessmentResponseForm(question=q) for q in questions]
 
-    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 'forms': forms}) 
+    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 'forms': forms})

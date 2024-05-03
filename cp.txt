@@ -251,7 +251,7 @@ def assessment_detail(request, pk):
     can_view_responses = can_perform('view_responses')
 
     # Fetch questions associated through collections linked to the assessment
-    questions = AssessmentQuestion.objects.filter(collection__assessment=assessment)
+    questions = assessment.collection.questions.all()  # Access questions through
 
     # Fetch responses if the user has permission to view them
     responses = AssessmentResponse.objects.filter(user_assessment=user_assessment) if can_view_responses else None
@@ -302,7 +302,7 @@ def submit_assessment(request, pk):
 def answer_questions(request, assessment_pk):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
-    questions = AssessmentQuestion.objects.filter(assessment=assessment)
+    questions = assessment.collection.questions.all()  # Access questions through
 
     if request.method == 'POST':
         forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]
@@ -346,15 +346,9 @@ class AssessmentResponseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.question = kwargs.pop('question')
         super().__init__(*args, **kwargs)
-        
-        # Customize field based on question type
-        if self.question.question_type == 'multiple_choice':
-            choices = [(o.pk, o.option_text) for o in self.question.options.all()]
-            self.fields['response_text'] = forms.ChoiceField(choices=choices, widget=forms.RadioSelect)
-        elif self.question.question_type == 'checkbox':
-            choices = [(o.pk, o.option_text) for o in self.question.options.all()]
-            self.fields['response_text'] = forms.MultipleChoiceField(choices=choices, widget=forms.CheckboxSelectMultiple)
-
+        if self.question:
+            self.fields['response_text'].label = self.question.question_text
+            self.fields['response_text'].help_text  = self.question.question_help_text
     class Meta:
         model = AssessmentResponse
         fields = ['response_text']
@@ -384,16 +378,6 @@ permissions = [
     ('guest', 'Guest')            # Very limited access, possibly only to certain data views
 ]
 
-class Assessment(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=50, choices=[('draft', 'Draft'), ('submitted', 'Submitted'), ('approved', 'Approved')])
-    due_date = models.DateField(null=True, blank=True)
-
-    def __str__(self):
-        return self.name
 
 def get_default_collection():
     # Try to get the first collection
@@ -418,7 +402,7 @@ class AssessmentQuestionCollection(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.id}"
-
+    
 class AssessmentQuestion(models.Model):
     collection = models.ForeignKey(
         'AssessmentQuestionCollection',
@@ -428,6 +412,7 @@ class AssessmentQuestion(models.Model):
         null=True  # Allows the field to be null if no default collection is available at the time
     )
     question_text = models.TextField()
+    question_help_text = models.TextField()
     question_type = models.CharField(max_length=50, choices=[
         ('multiple_choice', 'Multiple Choice'), 
         ('text', 'Text'), 
@@ -439,6 +424,25 @@ class AssessmentQuestion(models.Model):
     def __str__(self):
         return f"{self.question_text[:50]}..."  # Return first 50 characters if long
 
+class Assessment(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=50, choices=[('draft', 'Draft'), ('submitted', 'Submitted'), ('approved', 'Approved')])
+    due_date = models.DateField(null=True, blank=True)
+    collection = models.ForeignKey(
+        'AssessmentQuestionCollection',
+        on_delete=models.SET_NULL,
+        related_name='assessments',
+        null=True,  # Allows the field to be null
+        default=get_default_collection,  # Set the default collection
+        help_text="The collection used for this assessment."
+    )
+
+    def __str__(self):
+        return self.name
+    
 class UserAssessment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE, related_name='user_assessments')
