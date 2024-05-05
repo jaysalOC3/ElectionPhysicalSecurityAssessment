@@ -31,6 +31,7 @@ def get_default_collection():
 class AssessmentQuestionCollection(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    is_active = models.BooleanField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -45,6 +46,7 @@ class AssessmentQuestion(models.Model):
         default=get_default_collection,
         null=True  # Allows the field to be null if no default collection is available at the time
     )
+    question_section = models.CharField(max_length=10,default='None')
     question_text = models.TextField()
     question_help_text = models.TextField()
     question_type = models.CharField(max_length=50, choices=[

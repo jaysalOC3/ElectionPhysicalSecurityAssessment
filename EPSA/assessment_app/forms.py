@@ -4,7 +4,7 @@ from .models import Assessment, AssessmentResponse
 class AssessmentForm(forms.ModelForm):
     class Meta:
         model = Assessment
-        fields = ['name', 'description', 'status', 'due_date']
+        fields = ['name', 'collection', 'description', 'status', 'due_date']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
             'due_date': forms.DateInput(attrs={'type': 'date'}), 
