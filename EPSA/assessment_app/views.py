@@ -84,10 +84,21 @@ def submit_assessment(request, pk):
     return redirect('assessment_detail', pk=assessment.pk)
 
 @login_required
-def answer_questions(request, assessment_pk):
+def answer_questions(request, assessment_pk, question_section=None):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
-    questions = assessment.collection.questions.all()
+    question_section_all = assessment.collection.questions.values_list('question_section', flat=True).distinct()
+    # Filter questions based on the question_section if provided
+    if question_section:
+        questions = assessment.collection.questions.filter(question_section=question_section)
+    else:
+        # If question_section is not provided, redirect to the first available section
+        first_section = question_section_all.first()
+        if first_section:
+            return redirect('answer_questions_section', assessment_pk=assessment_pk, question_section=first_section)
+        else:
+            # Handle the case when no questions are available
+            questions = []
 
     if request.method == 'POST':
         forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]
@@ -101,4 +112,4 @@ def answer_questions(request, assessment_pk):
     else:
         forms = [AssessmentResponseForm(question=q) for q in questions]
 
-    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 'forms': forms})
+    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 'forms': forms, 'sections': question_section_all})

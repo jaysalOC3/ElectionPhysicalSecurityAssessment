@@ -11,4 +11,16 @@
     {% endfor %}
     <button type="submit">Submit Answers</button>
   </form>
+  <div class="pagination">
+    <span class="step-links">
+      {% for section in sections %}
+        {% if section == question_section %}
+          <strong>{{ section }}</strong>
+        {% else %}
+          <a href="{% url 'answer_questions_section' assessment_pk=assessment.pk question_section=section %}">{{ section }}</a>
+        {% endif %}
+        {% if not forloop.last %} | {% endif %}
+      {% endfor %}
+    </span>
+  </div>
 {% endblock %}

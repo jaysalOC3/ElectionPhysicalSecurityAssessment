@@ -29,8 +29,7 @@
     {% endfor %}
   </ul>
 
-  {% if not responses %}
-    <a href="{% url 'answer_questions' assessment.pk %}">Answer Questions</a>
-  {% endif %}
+  
+  <a href="{% url 'answer_questions' assessment.pk %}">Answer Questions</a>
 
 {% endblock %}

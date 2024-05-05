@@ -8,4 +8,6 @@ urlpatterns = [
     path('assessments/<int:pk>/edit/', views.edit_assessment, name='edit_assessment'),
     path('assessments/<int:pk>/submit/', views.submit_assessment, name='submit_assessment'),
     path('assessments/<int:assessment_pk>/answer/', views.answer_questions, name='answer_questions'),
+    path('assessments/<int:assessment_pk>/answer/<str:question_section>/', views.answer_questions, name='answer_questions_section'),
+
 ]
