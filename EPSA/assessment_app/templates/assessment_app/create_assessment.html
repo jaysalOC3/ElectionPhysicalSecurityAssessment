@@ -1,0 +1,10 @@
+{% extends 'base.html' %}  <!-- Assuming you have a base template -->
+
+{% block content %}
+  <h2>Create New Assessment</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}  <!-- Render the AssessmentForm fields -->
+    <button type="submit">Create Assessment</button>
+  </form>
+{% endblock %}

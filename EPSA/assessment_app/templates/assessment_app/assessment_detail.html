@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>{{ assessment.name }}</h2>
+  <p>{{ assessment.description }}</p>
+  <p>Status: {{ assessment.status }}</p>
+
+  {% if can_edit %}
+    <a href="{% url 'edit_assessment' assessment.pk %}">Edit Assessment</a>
+  {% endif %}
+
+  {% if can_submit %}
+    <a href="{% url 'submit_assessment' assessment.pk %}">Submit Assessment</a>
+  {% endif %}
+
+  <h3>Questions:</h3>
+  <ul>
+    {% for question in questions %}
+      <li>{{ question.question_text }}</li>
+      {% if responses %}
+        <ul>
+          {% for response in responses %}
+            {% if response.assessment_question == question %}
+              <li>{{ response.response_text }}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
+  </ul>
+
+  
+  <a href="{% url 'answer_questions' assessment.pk %}">Answer Questions</a>
+
+{% endblock %}
