@@ -5,7 +5,7 @@ admin.site.register(Assessment)
 admin.site.register(UserAssessment)
 @admin.register(AssessmentQuestion)
 class AssessmentQuestion(admin.ModelAdmin):
-    list_display = ('collection', 'order', 'question_text')
+    list_display = ('question_section', 'order', 'question_text')
     list_filter = ('collection',)
 
 @admin.register(AssessmentQuestionCollection)

@@ -1,16 +1,24 @@
 {% extends 'base.html' %}
+{% load progress_bar %}
 
 {% block content %}
   <h2>Answer Questions for: {{ assessment.name }}</h2>
+  <p>Progress: {% progress_bar progress %}</p>
+
   <form method="post">
     {% csrf_token %}
     {% for form in forms %}
       <div>
-        {{ form.as_p }} 
+        <label for="{{ form.response_text.id_for_label }}">{{ form.question.question_text }}</label>
+        <textarea name="response_{{ form.question.id }}" id="{{ form.response_text.id_for_label }}" rows="3" cols="100">{{ form.response_text.value|default:'' }}</textarea>
+        {% if form.response_text.help_text %}
+          <p class="help">{{ form.response_text.help_text }}</p>
+        {% endif %}
       </div>
     {% endfor %}
     <button type="submit">Submit Answers</button>
   </form>
+  
   <div class="pagination">
     <span class="step-links">
       {% for section in sections %}

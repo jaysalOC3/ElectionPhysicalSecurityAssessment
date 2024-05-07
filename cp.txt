@@ -289,10 +289,21 @@ def submit_assessment(request, pk):
     return redirect('assessment_detail', pk=assessment.pk)
 
 @login_required
-def answer_questions(request, assessment_pk):
+def answer_questions(request, assessment_pk, question_section=None):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
-    questions = assessment.collection.questions.all()
+    question_section_all = assessment.collection.questions.values_list('question_section', flat=True).distinct()
+    # Filter questions based on the question_section if provided
+    if question_section:
+        questions = assessment.collection.questions.filter(question_section=question_section)
+    else:
+        # If question_section is not provided, redirect to the first available section
+        first_section = question_section_all.first()
+        if first_section:
+            return redirect('answer_questions_section', assessment_pk=assessment_pk, question_section=first_section)
+        else:
+            # Handle the case when no questions are available
+            questions = []
 
     if request.method == 'POST':
         forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]
@@ -306,7 +317,16 @@ def answer_questions(request, assessment_pk):
     else:
         forms = [AssessmentResponseForm(question=q) for q in questions]
 
-    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 'forms': forms})
+    # Calculate progress. 
+    progress, answered_questions, total_questions = assessment.get_progress(request.user, question_section)
+
+    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 
+                                                                    'forms': forms, 
+                                                                    'sections': question_section_all, 
+                                                                    'progress': progress,
+                                                                    'answered_questions': answered_questions,
+                                                                    'total_questions': total_questions, 
+    })
 
 ========== Python django File: ./EPSA/assessment_app/__init__.py
 
@@ -327,7 +347,7 @@ from .models import Assessment, AssessmentResponse
 class AssessmentForm(forms.ModelForm):
     class Meta:
         model = Assessment
-        fields = ['name', 'description', 'status', 'due_date']
+        fields = ['name', 'collection', 'description', 'status', 'due_date']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
             'due_date': forms.DateInput(attrs={'type': 'date'}), 
@@ -388,6 +408,7 @@ def get_default_collection():
 class AssessmentQuestionCollection(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    is_active = models.BooleanField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -402,6 +423,7 @@ class AssessmentQuestion(models.Model):
         default=get_default_collection,
         null=True  # Allows the field to be null if no default collection is available at the time
     )
+    question_section = models.CharField(max_length=10,default='None')
     question_text = models.TextField()
     question_help_text = models.TextField()
     question_type = models.CharField(max_length=50, choices=[
@@ -430,6 +452,16 @@ class Assessment(models.Model):
         default=get_default_collection,  # Set the default collection
         help_text="The collection used for this assessment."
     )
+
+    def get_progress(self, user, question_section=None):
+        total_questions = self.collection.questions.count()
+        answered_questions = AssessmentResponse.objects.filter(
+            user_assessment__user=user,
+            user_assessment__assessment=self,
+            assessment_question__question_section=question_section
+        ).count()
+        progress = (answered_questions / total_questions) * 100 if total_questions > 0 else 0
+        return progress, answered_questions, total_questions
 
     def __str__(self):
         return self.name
@@ -471,6 +503,8 @@ urlpatterns = [
     path('assessments/<int:pk>/edit/', views.edit_assessment, name='edit_assessment'),
     path('assessments/<int:pk>/submit/', views.submit_assessment, name='submit_assessment'),
     path('assessments/<int:assessment_pk>/answer/', views.answer_questions, name='answer_questions'),
+    path('assessments/<int:assessment_pk>/answer/<str:question_section>/', views.answer_questions, name='answer_questions_section'),
+
 ]
 
 ========== Python django File: ./EPSA/assessment_app/admin.py
@@ -479,140 +513,150 @@ from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentRe
 
 admin.site.register(Assessment)
 admin.site.register(UserAssessment)
-admin.site.register(AssessmentQuestion)
+@admin.register(AssessmentQuestion)
+class AssessmentQuestion(admin.ModelAdmin):
+    list_display = ('question_section', 'order', 'question_text')
+    list_filter = ('collection',)
+
+@admin.register(AssessmentQuestionCollection)
+class AssessmentQuestionCollection(admin.ModelAdmin):
+    list_display = ('name', 'is_active')
+
 admin.site.register(AssessmentResponse)
 admin.site.register(UserAssessmentPermission)
 
-admin.site.register(AssessmentQuestionCollection)
-
 
 ========================================
-Folder: ./EPSA/polling_site_app
-========== Python django File: ./EPSA/polling_site_app/views.py
-from django.shortcuts import render
-from .models import PollingSite
+Folder: ./EPSA/assessment_app/templates/assessment_app
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/answer_questions.html
+{% extends 'base.html' %}
+{% load progress_bar %}
 
-def polling_site_list(request):
-    polling_sites = PollingSite.objects.all()
-    # ... implement search and filtering logic (if needed) ...
-    return render(request, 'polling_site_app/polling_site_list.html', {'polling_sites': polling_sites})
+{% block content %}
+  <h2>Answer Questions for: {{ assessment.name }}</h2>
+  <p>Progress: {% progress_bar progress %}</p>
 
-def polling_site_detail(request, pk):
-    polling_site = get_object_or_404(PollingSite, pk=pk)
-    return render(request, 'polling_site_app/polling_site_detail.html', {'polling_site': polling_site})
-
-
-========== Python django File: ./EPSA/polling_site_app/__init__.py
-
-
-========== Python django File: ./EPSA/polling_site_app/apps.py
-from django.apps import AppConfig
-
-
-class PollingSiteAppConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "polling_site_app"
-
-
-========== Python django File: ./EPSA/polling_site_app/tests.py
-from django.test import TestCase
-
-# Create your tests here.
-
-
-========== Python django File: ./EPSA/polling_site_app/models.py
-from django.db import models
-
-class State(models.Model):
-    name = models.CharField(max_length=255)
-    code = models.CharField(max_length=2)  # e.g., "CA", "NY"
-
-    def __str__(self):
-        return self.name
-
-class County(models.Model):
-    name = models.CharField(max_length=255)
-    state = models.ForeignKey(State, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
-class CityOrTown(models.Model):
-    name = models.CharField(max_length=255)
-    county = models.ForeignKey(County, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
-class PollingSite(models.Model):
-    name = models.CharField(max_length=255)
-    address = models.CharField(max_length=255)
-    city_or_town = models.ForeignKey(CityOrTown, on_delete=models.CASCADE)
-    state = models.ForeignKey(State, on_delete=models.CASCADE) 
-    zip_code = models.CharField(max_length=10)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-
-    def __str__(self):
-        return self.name
+  <form method="post">
+    {% csrf_token %}
+    {% for form in forms %}
+      <div>
+        {{ form.as_p }} 
+      </div>
+    {% endfor %}
+    <button type="submit">Submit Answers</button>
+  </form>
+  <div class="pagination">
+    <span class="step-links">
+      {% for section in sections %}
+        {% if section == question_section %}
+          <strong>{{ section }}</strong>
+        {% else %}
+          <a href="{% url 'answer_questions_section' assessment_pk=assessment.pk question_section=section %}">{{ section }}</a>
+        {% endif %}
+        {% if not forloop.last %} | {% endif %}
+      {% endfor %}
+    </span>
+  </div>
+{% endblock %}
 
 
-========== Python django File: ./EPSA/polling_site_app/admin.py
-from django.contrib import admin
-from .models import State, County, CityOrTown, PollingSite
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/edit_assessment.html
+{% extends 'base.html' %}
 
-admin.site.register(State)
-admin.site.register(County)
-admin.site.register(CityOrTown)
-admin.site.register(PollingSite)
+{% block content %}
+  <h2>Edit Assessment: {{ assessment.name }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save Changes</button>
+  </form>
+{% endblock %}
 
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/assessment_detail.html
+{% extends 'base.html' %}
 
-========================================
-Folder: ./EPSA/user_feedback_app
-========== Python django File: ./EPSA/user_feedback_app/views.py
-from django.shortcuts import render
+{% block content %}
+  <h2>{{ assessment.name }}</h2>
+  <p>{{ assessment.description }}</p>
+  <p>Status: {{ assessment.status }}</p>
 
-# Create your views here.
+  {% if can_edit %}
+    <a href="{% url 'edit_assessment' assessment.pk %}">Edit Assessment</a>
+  {% endif %}
 
+  {% if can_submit %}
+    <a href="{% url 'submit_assessment' assessment.pk %}">Submit Assessment</a>
+  {% endif %}
 
-========== Python django File: ./EPSA/user_feedback_app/__init__.py
+  <h3>Questions:</h3>
+  <ul>
+    {% for question in questions %}
+      <li>{{ question.question_text }}</li>
+      {% if responses %}
+        <ul>
+          {% for response in responses %}
+            {% if response.assessment_question == question %}
+              <li>{{ response.response_text }}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
+  </ul>
 
+  
+  <a href="{% url 'answer_questions' assessment.pk %}">Answer Questions</a>
 
-========== Python django File: ./EPSA/user_feedback_app/apps.py
-from django.apps import AppConfig
+{% endblock %}
 
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/index.html
+{% extends 'base.html' %}  <!-- Assuming you have a base template -->
 
-class UserFeedbackAppConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "user_feedback_app"
+{% block content %}
+  <h1>Welcome to the Assessment App!</h1>
 
+  {% if user.is_authenticated %}
+    <p>Logged in as: {{ user.username }}</p>
+  {% else %}
+    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a> to get started.</p>
+  {% endif %}
 
-========== Python django File: ./EPSA/user_feedback_app/tests.py
-from django.test import TestCase
+  <h2>Assessments:</h2>
+  <ul>
+    {% for assessment in assessments %}
+      <li>
+        <a href="{% url 'assessment_detail' assessment.pk %}">{{ assessment.name }}</a> - 
+        Status: {{ assessment.status }} - 
+        Due Date: {{ assessment.due_date }}
+      </li>
+    {% endfor %}
+  </ul>
 
-# Create your tests here.
+  {% if user.is_authenticated %}
+    <a href="{% url 'create_assessment' %}">Create New Assessment</a>
+    <a href="{% url 'user_profile' %}">My Profile</a>
+  {% endif %}
+{% endblock %}
 
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/progress_bar.html
+<div class="progress">
+    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}"
+        aria-valuemin="0" aria-valuemax="100">
+        {{ progress }}%
+    </div>
+</div>
 
-========== Python django File: ./EPSA/user_feedback_app/models.py
-from django.db import models
-from django.contrib.auth.models import User
+========== Python django File: ./EPSA/assessment_app/templates/assessment_app/create_assessment.html
+{% extends 'base.html' %}  <!-- Assuming you have a base template -->
 
-class UserFeedback(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
-    category = models.CharField(max_length=50, choices=[('usability', 'Usability'), ('functionality', 'Functionality'), ('bug_report', 'Bug Report')])
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Feedback from {self.user.username}"
-
-
-========== Python django File: ./EPSA/user_feedback_app/admin.py
-from django.contrib import admin
-from .models import UserFeedback
-
-admin.site.register(UserFeedback)
+{% block content %}
+  <h2>Create New Assessment</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}  <!-- Render the AssessmentForm fields -->
+    <button type="submit">Create Assessment</button>
+  </form>
+{% endblock %}
 
 ========================================
 Folder: ./EPSA/user_management_app
@@ -778,97 +822,6 @@ from .models import UserRole, Comment, NotificationPreference
 admin.site.register(UserRole)
 admin.site.register(Comment)
 admin.site.register(NotificationPreference)
-
-
-========================================
-Folder: ./EPSA/admin_compliance_app
-========== Python django File: ./EPSA/admin_compliance_app/views.py
-from django.shortcuts import render
-
-# Create your views here.
-
-
-========== Python django File: ./EPSA/admin_compliance_app/__init__.py
-
-
-========== Python django File: ./EPSA/admin_compliance_app/apps.py
-from django.apps import AppConfig
-
-
-class AdminComplianceAppConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "admin_compliance_app"
-
-
-========== Python django File: ./EPSA/admin_compliance_app/tests.py
-from django.test import TestCase
-
-# Create your tests here.
-
-
-========== Python django File: ./EPSA/admin_compliance_app/models.py
-from django.db import models
-from assessment_app.models import Assessment
-
-class ComplianceReport(models.Model):
-    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE)
-    report_data = models.TextField()  # Consider using JSONField for structured data
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Compliance Report for Assessment {self.assessment.id}"
-
-========== Python django File: ./EPSA/admin_compliance_app/admin.py
-from django.contrib import admin
-from .models import ComplianceReport
-
-admin.site.register(ComplianceReport)
-
-
-========================================
-Folder: ./EPSA/adv_user_management_app
-========== Python django File: ./EPSA/adv_user_management_app/views.py
-from django.shortcuts import render
-
-# Create your views here.
-
-
-========== Python django File: ./EPSA/adv_user_management_app/__init__.py
-
-
-========== Python django File: ./EPSA/adv_user_management_app/apps.py
-from django.apps import AppConfig
-
-
-class AdvUserManagementAppConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "adv_user_management_app"
-
-
-========== Python django File: ./EPSA/adv_user_management_app/tests.py
-from django.test import TestCase
-
-# Create your tests here.
-
-
-========== Python django File: ./EPSA/adv_user_management_app/models.py
-from django.db import models
-from django.contrib.auth.models import User
-
-class UserActivityLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.action} at {self.timestamp}"
-
-========== Python django File: ./EPSA/adv_user_management_app/admin.py
-from django.contrib import admin
-from .models import UserActivityLog
-
-admin.site.register(UserActivityLog)
 
 
 ========================================

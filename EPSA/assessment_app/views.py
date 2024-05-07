@@ -88,28 +88,44 @@ def answer_questions(request, assessment_pk, question_section=None):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
     question_section_all = assessment.collection.questions.values_list('question_section', flat=True).distinct()
-    # Filter questions based on the question_section if provided
+
     if question_section:
         questions = assessment.collection.questions.filter(question_section=question_section)
     else:
-        # If question_section is not provided, redirect to the first available section
         first_section = question_section_all.first()
         if first_section:
             return redirect('answer_questions_section', assessment_pk=assessment_pk, question_section=first_section)
         else:
-            # Handle the case when no questions are available
             questions = []
 
     if request.method == 'POST':
-        forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]
-        if all(form.is_valid() for form in forms):
-            for form, question in zip(forms, questions):
-                response = form.save(commit=False)
-                response.user_assessment = user_assessment
-                response.assessment_question = question  # Assign the assessment_question
-                response.save()
-            return redirect('assessment_detail', pk=assessment.pk)
+        for question in questions:
+            response_text = request.POST.get(f'response_{question.id}', '')
+            response, created = AssessmentResponse.objects.get_or_create(
+                user_assessment=user_assessment,
+                assessment_question=question,
+                defaults={'response_text': response_text}
+            )
+            response.response_text = response_text
+            response.save()
+        return redirect('assessment_detail', pk=assessment.pk)
     else:
-        forms = [AssessmentResponseForm(question=q) for q in questions]
+        forms = []
+        for question in questions:
+            response = AssessmentResponse.objects.filter(
+                user_assessment=user_assessment,
+                assessment_question=question
+            ).order_by('-id').first()  # Get the latest response for each question
+            initial_data = {'response_text': response.response_text if response else ''}
+            forms.append(AssessmentResponseForm(question=question, initial=initial_data))
 
-    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 'forms': forms, 'sections': question_section_all})
+    progress, answered_questions, total_questions = assessment.get_progress(request.user, question_section)
+
+    return render(request, 'assessment_app/answer_questions.html', {
+        'assessment': assessment,
+        'forms': forms,
+        'sections': question_section_all,
+        'progress': progress,
+        'answered_questions': answered_questions,
+        'total_questions': total_questions,
+    })

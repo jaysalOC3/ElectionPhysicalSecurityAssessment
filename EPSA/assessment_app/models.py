@@ -76,6 +76,16 @@ class Assessment(models.Model):
         help_text="The collection used for this assessment."
     )
 
+    def get_progress(self, user, question_section=None):
+        total_questions = self.collection.questions.count()
+        answered_questions = AssessmentResponse.objects.filter(
+            user_assessment__user=user,
+            user_assessment__assessment=self,
+            assessment_question__question_section=question_section
+        ).count()
+        progress = (answered_questions / total_questions) * 100 if total_questions > 0 else 0
+        return progress, answered_questions, total_questions
+
     def __str__(self):
         return self.name
     
