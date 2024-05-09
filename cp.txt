@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "assessment_app",
     "user_management_app",
+    "threat_solutions_app",
 ]
 
 MIDDLEWARE = [
@@ -178,6 +179,7 @@ urlpatterns = [
     path("", include("assessment_app.urls")),
     path("", include("user_management_app.urls")),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('solutions/', include('threat_solutions_app.urls')),
 ]
 
 
@@ -205,8 +207,13 @@ Folder: ./EPSA/assessment_app
 ========== Python django File: ./EPSA/assessment_app/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+
 from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse
 from .forms import AssessmentForm, AssessmentResponseForm 
+
+from .risk_landscape import generate_risk_landscape_data
 
 def index(request):
     assessments = Assessment.objects.all()  # Fetch all assessments
@@ -293,40 +300,52 @@ def answer_questions(request, assessment_pk, question_section=None):
     assessment = get_object_or_404(Assessment, pk=assessment_pk)
     user_assessment = get_object_or_404(UserAssessment, user=request.user, assessment=assessment)
     question_section_all = assessment.collection.questions.values_list('question_section', flat=True).distinct()
-    # Filter questions based on the question_section if provided
+
     if question_section:
         questions = assessment.collection.questions.filter(question_section=question_section)
     else:
-        # If question_section is not provided, redirect to the first available section
         first_section = question_section_all.first()
         if first_section:
             return redirect('answer_questions_section', assessment_pk=assessment_pk, question_section=first_section)
         else:
-            # Handle the case when no questions are available
             questions = []
 
     if request.method == 'POST':
-        forms = [AssessmentResponseForm(request.POST, question=q) for q in questions]
-        if all(form.is_valid() for form in forms):
-            for form, question in zip(forms, questions):
-                response = form.save(commit=False)
-                response.user_assessment = user_assessment
-                response.assessment_question = question  # Assign the assessment_question
-                response.save()
-            return redirect('assessment_detail', pk=assessment.pk)
+        for question in questions:
+            response_text = request.POST.get(f'response_{question.id}', '')
+            response, created = AssessmentResponse.objects.get_or_create(
+                user_assessment=user_assessment,
+                assessment_question=question,
+                defaults={'response_text': response_text}
+            )
+            response.response_text = response_text
+            response.save()
+        return redirect('assessment_detail', pk=assessment.pk)
     else:
-        forms = [AssessmentResponseForm(question=q) for q in questions]
+        forms = []
+        for question in questions:
+            response = AssessmentResponse.objects.filter(
+                user_assessment=user_assessment,
+                assessment_question=question
+            ).order_by('-id').first()  # Get the latest response for each question
+            initial_data = {'response_text': response.response_text if response else ''}
+            forms.append(AssessmentResponseForm(question=question, initial=initial_data))
 
-    # Calculate progress. 
     progress, answered_questions, total_questions = assessment.get_progress(request.user, question_section)
 
-    return render(request, 'assessment_app/answer_questions.html', {'assessment': assessment, 
-                                                                    'forms': forms, 
-                                                                    'sections': question_section_all, 
-                                                                    'progress': progress,
-                                                                    'answered_questions': answered_questions,
-                                                                    'total_questions': total_questions, 
+    return render(request, 'assessment_app/answer_questions.html', {
+        'assessment': assessment,
+        'forms': forms,
+        'sections': question_section_all,
+        'progress': progress,
+        'answered_questions': answered_questions,
+        'total_questions': total_questions,
     })
+
+@login_required
+def risk_landscape_data(request):
+    data = generate_risk_landscape_data()
+    return JsonResponse(data)
 
 ========== Python django File: ./EPSA/assessment_app/__init__.py
 
@@ -373,6 +392,85 @@ from django.test import TestCase
 
 # Create your tests here.
 
+
+========== Python django File: ./EPSA/assessment_app/risk_landscape.py
+import random
+
+def list_return_threats():
+    nodes = [
+        {"name": "Reconnaissance"},
+        {"name": "Resource Development"},
+        {"name": "Initial Access"},
+        {"name": "Execution"},
+        {"name": "Persistence"},
+        {"name": "Privilege Escalation"},
+        {"name": "Defense Evasion"},
+        {"name": "Credential Access"},
+        {"name": "Discovery"},
+        {"name": "Lateral Movement"},
+        {"name": "Collection"},
+        {"name": "Command and Control"},
+        {"name": "Exfiltration"},
+        {"name": "Impact"},
+    ]
+    return nodes
+
+def list_return_treatments():
+    nodes = [
+        {"name": "Mitigated"},
+        {"name": "Partially Mitigated"},
+        {"name": "Accepted"},
+        {"name": "Unmitigated"},
+    ]
+    return nodes
+
+def list_return_products():
+    nodes = [
+        {"name": "Product 1"},
+        {"name": "Product 2"},
+        {"name": "Product 3"},
+        {"name": "Product 4"},
+    ]
+    return nodes
+
+def generate_product_threats():
+    return_links = []
+    assigned_threats = set()
+
+    for product in list_return_products():
+        threats = list_return_threats()
+        for threat_num in range(3):
+            if threats:
+                selected_item = random.choice(threats)
+                threats.remove(selected_item)
+                assigned_threats.add(selected_item["name"])
+                return_links.append({"source": selected_item["name"], "target": product["name"], "value": 3})
+        return_links.append({"source": product["name"], "target": "Mitigated", "value": 3})
+
+    unassigned_threats = set(threat["name"] for threat in list_return_threats()) - assigned_threats
+    for threat in unassigned_threats:
+        target = random.choice(["Partially Mitigated", "Accepted", "Unmitigated"])
+        return_links.append({"source": threat, "target": target, "value": 3})
+
+    print(return_links)
+    return return_links
+
+def generate_risk_landscape_data():
+    # Business logic to generate the data dynamically
+    # This can involve querying the database, performing calculations, etc.
+    nodes = []
+    nodes += list_return_threats()
+    nodes += list_return_treatments()
+    nodes += list_return_products()
+
+    links = generate_product_threats()
+
+    data = {
+        "nodes": nodes,
+        "links": links
+    }
+
+    return data
 
 ========== Python django File: ./EPSA/assessment_app/models.py
 from django.db import models
@@ -504,6 +602,7 @@ urlpatterns = [
     path('assessments/<int:pk>/submit/', views.submit_assessment, name='submit_assessment'),
     path('assessments/<int:assessment_pk>/answer/', views.answer_questions, name='answer_questions'),
     path('assessments/<int:assessment_pk>/answer/<str:question_section>/', views.answer_questions, name='answer_questions_section'),
+    path('risk-landscape-data/', views.risk_landscape_data, name='risk_landscape_data'),
 
 ]
 
@@ -525,138 +624,6 @@ class AssessmentQuestionCollection(admin.ModelAdmin):
 admin.site.register(AssessmentResponse)
 admin.site.register(UserAssessmentPermission)
 
-
-========================================
-Folder: ./EPSA/assessment_app/templates/assessment_app
-========== Python django File: ./EPSA/assessment_app/templates/assessment_app/answer_questions.html
-{% extends 'base.html' %}
-{% load progress_bar %}
-
-{% block content %}
-  <h2>Answer Questions for: {{ assessment.name }}</h2>
-  <p>Progress: {% progress_bar progress %}</p>
-
-  <form method="post">
-    {% csrf_token %}
-    {% for form in forms %}
-      <div>
-        {{ form.as_p }} 
-      </div>
-    {% endfor %}
-    <button type="submit">Submit Answers</button>
-  </form>
-  <div class="pagination">
-    <span class="step-links">
-      {% for section in sections %}
-        {% if section == question_section %}
-          <strong>{{ section }}</strong>
-        {% else %}
-          <a href="{% url 'answer_questions_section' assessment_pk=assessment.pk question_section=section %}">{{ section }}</a>
-        {% endif %}
-        {% if not forloop.last %} | {% endif %}
-      {% endfor %}
-    </span>
-  </div>
-{% endblock %}
-
-
-========== Python django File: ./EPSA/assessment_app/templates/assessment_app/edit_assessment.html
-{% extends 'base.html' %}
-
-{% block content %}
-  <h2>Edit Assessment: {{ assessment.name }}</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Changes</button>
-  </form>
-{% endblock %}
-
-========== Python django File: ./EPSA/assessment_app/templates/assessment_app/assessment_detail.html
-{% extends 'base.html' %}
-
-{% block content %}
-  <h2>{{ assessment.name }}</h2>
-  <p>{{ assessment.description }}</p>
-  <p>Status: {{ assessment.status }}</p>
-
-  {% if can_edit %}
-    <a href="{% url 'edit_assessment' assessment.pk %}">Edit Assessment</a>
-  {% endif %}
-
-  {% if can_submit %}
-    <a href="{% url 'submit_assessment' assessment.pk %}">Submit Assessment</a>
-  {% endif %}
-
-  <h3>Questions:</h3>
-  <ul>
-    {% for question in questions %}
-      <li>{{ question.question_text }}</li>
-      {% if responses %}
-        <ul>
-          {% for response in responses %}
-            {% if response.assessment_question == question %}
-              <li>{{ response.response_text }}</li>
-            {% endif %}
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endfor %}
-  </ul>
-
-  
-  <a href="{% url 'answer_questions' assessment.pk %}">Answer Questions</a>
-
-{% endblock %}
-
-========== Python django File: ./EPSA/assessment_app/templates/assessment_app/index.html
-{% extends 'base.html' %}  <!-- Assuming you have a base template -->
-
-{% block content %}
-  <h1>Welcome to the Assessment App!</h1>
-
-  {% if user.is_authenticated %}
-    <p>Logged in as: {{ user.username }}</p>
-  {% else %}
-    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a> to get started.</p>
-  {% endif %}
-
-  <h2>Assessments:</h2>
-  <ul>
-    {% for assessment in assessments %}
-      <li>
-        <a href="{% url 'assessment_detail' assessment.pk %}">{{ assessment.name }}</a> - 
-        Status: {{ assessment.status }} - 
-        Due Date: {{ assessment.due_date }}
-      </li>
-    {% endfor %}
-  </ul>
-
-  {% if user.is_authenticated %}
-    <a href="{% url 'create_assessment' %}">Create New Assessment</a>
-    <a href="{% url 'user_profile' %}">My Profile</a>
-  {% endif %}
-{% endblock %}
-
-========== Python django File: ./EPSA/assessment_app/templates/assessment_app/progress_bar.html
-<div class="progress">
-    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}"
-        aria-valuemin="0" aria-valuemax="100">
-        {{ progress }}%
-    </div>
-</div>
-
-========== Python django File: ./EPSA/assessment_app/templates/assessment_app/create_assessment.html
-{% extends 'base.html' %}  <!-- Assuming you have a base template -->
-
-{% block content %}
-  <h2>Create New Assessment</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}  <!-- Render the AssessmentForm fields -->
-    <button type="submit">Create Assessment</button>
-  </form>
-{% endblock %}
 
 ========================================
 Folder: ./EPSA/user_management_app
@@ -822,6 +789,52 @@ from .models import UserRole, Comment, NotificationPreference
 admin.site.register(UserRole)
 admin.site.register(Comment)
 admin.site.register(NotificationPreference)
+
+
+========================================
+Folder: ./EPSA/threat_solutions_app
+========== Python django File: ./EPSA/threat_solutions_app/views.py
+from django.shortcuts import render
+
+# Create your views here.
+
+
+========== Python django File: ./EPSA/threat_solutions_app/__init__.py
+
+
+========== Python django File: ./EPSA/threat_solutions_app/apps.py
+from django.apps import AppConfig
+
+
+class ThreatSolutionsAppConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "threat_solutions_app"
+
+
+========== Python django File: ./EPSA/threat_solutions_app/tests.py
+from django.test import TestCase
+
+# Create your tests here.
+
+
+========== Python django File: ./EPSA/threat_solutions_app/models.py
+from django.db import models
+
+# Create your models here.
+
+
+========== Python django File: ./EPSA/threat_solutions_app/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+
+]
+
+========== Python django File: ./EPSA/threat_solutions_app/admin.py
+from django.contrib import admin
+
+# Register your models here.
 
 
 ========================================

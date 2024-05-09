@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "assessment_app",
     "user_management_app",
+    "threat_solutions_app",
 ]
 
 MIDDLEWARE = [
