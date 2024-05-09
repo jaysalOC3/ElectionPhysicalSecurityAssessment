@@ -1,7 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+
 from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse
 from .forms import AssessmentForm, AssessmentResponseForm 
+
+from .risk_landscape import generate_risk_landscape_data
 
 def index(request):
     assessments = Assessment.objects.all()  # Fetch all assessments
@@ -129,3 +134,8 @@ def answer_questions(request, assessment_pk, question_section=None):
         'answered_questions': answered_questions,
         'total_questions': total_questions,
     })
+
+@login_required
+def risk_landscape_data(request):
+    data = generate_risk_landscape_data()
+    return JsonResponse(data)
