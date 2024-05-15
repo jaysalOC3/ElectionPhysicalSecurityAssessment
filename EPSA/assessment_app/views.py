@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from .models import Assessment, UserAssessment, AssessmentQuestion, AssessmentResponse
 from .forms import AssessmentForm, AssessmentResponseForm 
 
-from .risk_landscape import generate_risk_landscape_data
+from threat_solutions_app.views import risk_landscape_data
 
 def index(request):
     assessments = Assessment.objects.all()  # Fetch all assessments
@@ -137,5 +137,4 @@ def answer_questions(request, assessment_pk, question_section=None):
 
 @login_required
 def risk_landscape_data(request):
-    data = generate_risk_landscape_data()
-    return JsonResponse(data)
+    return JsonResponse(risk_landscape_data())

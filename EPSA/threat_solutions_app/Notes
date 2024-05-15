@@ -1,0 +1,57 @@
+Reconnaissance:
+
+Help Text: The adversary gathers information about the target system or environment to identify vulnerabilities.
+Story: Imagine a burglar casing a neighborhood, looking for unlocked doors and open windows. Our reconnaissance detection tools are like the neighborhood watch, constantly scanning for suspicious activity before it becomes a break-in.
+Resource Development:
+
+Help Text: The adversary acquires the tools and resources necessary for the attack, such as malware or exploit kits.
+Story: Think of it like a criminal gathering supplies for a heist. Our threat intelligence keeps you ahead of the curve, revealing the latest tools being used so you can block them before they're deployed against you.
+Initial Access:
+
+Help Text: The adversary gains a foothold on the target system, often through phishing emails or drive-by downloads.
+Story: This is the first step onto your property – like a trespasser finding a way through a fence. Our endpoint security solutions are like guard dogs, trained to spot and neutralize intruders before they can cause damage.
+Execution:
+
+Help Text: The adversary runs malicious code or commands on the target system, potentially leading to data theft or system disruption.
+Story: This is where the real damage starts – like a vandal spray-painting your walls. Our intrusion prevention systems act as a shield, blocking malicious actions before they can take effect.
+Persistence:
+
+Help Text: The adversary maintains access to the target system even after initial detection, often through backdoors or hidden malware.
+Story: Think of this like a squatter refusing to leave. Our advanced threat detection solutions are like detectives, tirelessly searching for hidden threats and removing them before they can cause lasting harm.
+Privilege Escalation:
+
+Help Text: The adversary gains elevated access rights on the target system, allowing them to access sensitive data or install more powerful malware.
+Story: This is like a thief stealing your house keys. Our privilege management solutions are like a security system, ensuring that only authorized personnel can access critical areas.
+Defense Evasion:
+
+Help Text: The adversary avoids detection by security tools or personnel, often by using obfuscation or encryption techniques.
+Story: It's like a chameleon blending in with its surroundings. Our deception technology lures attackers into traps, revealing their presence and intentions.
+Credential Access:
+
+Help Text: The adversary steals or acquires legitimate credentials for access, often through phishing or password cracking.
+Story: This is like someone stealing your identity. Our identity and access management solutions protect your credentials like a bank vault, ensuring only authorized users can enter.
+Discovery:
+
+Help Text: The adversary explores the target system to identify vulnerabilities and assets.
+Story: Imagine a thief mapping out the layout of your house before a robbery. Our vulnerability scanners are like security cameras, constantly watching for weak points in your defenses.
+Lateral Movement:
+
+Help Text: The adversary moves between systems within the network, often to expand their access or evade detection.
+Story: This is like a burglar moving from room to room, searching for valuables. Our micro-segmentation solutions create secure zones, preventing attackers from spreading through your network.
+Collection:
+
+Help Text: The adversary gathers data or information from the target system, potentially including sensitive or proprietary information.
+Story: Think of this like a spy stealing confidential documents. Our data loss prevention (DLP) solutions are like security guards, monitoring your data and preventing it from falling into the wrong hands.
+Command and Control:
+
+Help Text: The adversary establishes a communication channel to control the attack remotely.
+Story: This is the lifeline of the attack, like a phone line for a hostage negotiation. Our network traffic analysis (NTA) tools act as wiretaps, detecting and disrupting malicious communications.
+Exfiltration:
+
+Help Text: The adversary transfers data or information from the target system, often to a remote server under their control.
+Story: This is the final stage of the heist, like a thief making off with stolen goods. Our data exfiltration prevention tools act as alarms, alerting you to unauthorized data transfers.
+Impact:
+
+Help Text: The adversary disrupts operations, destroys data, or causes other harm to the target system or environment.
+Story: This is the aftermath of the attack, like the damage left behind after a fire. Our incident response and recovery solutions are like firefighters, minimizing damage and helping you get back on your feet.
+

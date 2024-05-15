@@ -9,7 +9,7 @@ class Threat(models.Model):
 
 class ThreatMitigation(models.Model):
     name = models.CharField(max_length=100)
-    threat = models.ForeignKey(Threat, on_delete=models.CASCADE, related_name='ThreatMitigation', null=True, blank=True)
+    threat = models.ForeignKey(Threat, on_delete=models.CASCADE, related_name='mitigations')  
     vendor_description = models.TextField(blank=True)
     description = models.TextField(blank=True)
 
@@ -32,10 +32,10 @@ class Vendor(models.Model):
     
 class Safeguard(models.Model):
     name = models.CharField(max_length=100)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='safeguards_vendor', null=True, blank=True)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='safeguards', null=True, blank=True)
     description = models.TextField()
-    threats = models.ManyToManyField(ThreatMitigation, related_name='safeguards_threats', blank=True)
-    treatment = models.ForeignKey(RiskTreatment, on_delete=models.CASCADE, related_name='safeguards_treatment', null=True, blank=True)
+    threat_mitigations = models.ManyToManyField(ThreatMitigation, related_name='safeguards', blank=True)
+    risk_treatment = models.ForeignKey(RiskTreatment, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
